@@ -16,7 +16,7 @@ type body struct {
 	eof  bool
 }
 
-func (b body) Read(p []byte) (int, error) {
+func (b *body) Read(p []byte) (int, error) {
 	written := 0
 
 	if b.eof {
