@@ -24,38 +24,31 @@ func (b body) Read(p []byte) (int, error) {
 	}
 
 	for written < len(p) && b.br.Buffered() > 0 {
-		bt, err := b.br.ReadByte()
+		bs, err := b.br.ReadBytes('\n')
 
 		if err != nil {
 			return written, err
 		}
 
-		switch bt {
-		case '.':
-			if bs, err := b.br.Peek(2); err == nil {
-				if bytes.Equal(bs, []byte("\r\n")) {
-					b.br.ReadByte()
-					b.br.ReadByte()
-					b.eof = true
-					b.done.Done()
-					return written, io.EOF
-				} else if bs[0] == '.' {
-					b.br.ReadByte()
-					//Go back to copying
-					break
-				}
-			}
-		case '\r':
-			bt, err = b.br.ReadByte()
-
-			if err != nil {
-				return written, err
-			}
+		if bytes.Equal(bs, []byte(EndLine)) {
+			b.eof = true
+			b.done.Done()
+			return written, io.EOF
 		}
 
-		p[written] = bt
-		written++
+		if len(bs) > 2 && bs[len(bs)-2] == '\r' {
+			bs[len(bs)-2] = '\n'
+			bs = bs[:len(bs)-1]
+		}
+
+		n := copy(p[written:], bs)
+		written += n
 	}
+
+	if written == 0 && b.br.Buffered() == 0 {
+		return written, io.ErrUnexpectedEOF
+	}
+
 	return written, nil
 }
 

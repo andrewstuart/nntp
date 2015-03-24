@@ -14,10 +14,12 @@ type connection struct {
 }
 
 func newConnection(rw io.ReadWriter) *connection {
-	return &connection{
+	c := connection{
 		io.Writer(rw),
 		bufio.NewReader(rw),
 	}
+
+	return &c
 }
 
 //init sets up a connection to the server
@@ -46,7 +48,7 @@ func (cli *Client) getConn() (*connection, error) {
 	_, err = bufCon.br.ReadBytes('\n')
 
 	if err != nil {
-		return nil, fmt.Errorf("Error reading WELCOME message: %v", err)
+		return nil, fmt.Errorf("error reading WELCOME message: %v", err)
 	}
 
 	//Automatically authenticate new connections
@@ -54,6 +56,18 @@ func (cli *Client) getConn() (*connection, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("error authenticating: %v", err)
+	}
+
+	if cli.CurrGroup != "" {
+		res, err := bufCon.do("GROUP %s", cli.CurrGroup)
+
+		if err != nil {
+			return nil, fmt.Errorf("error connecting to group: %v", err)
+		}
+
+		if res.Code != GroupJoined {
+			fmt.Errorf("could not join group %s: %v", cli.CurrGroup, res.Message)
+		}
 	}
 
 	cli.conns = append(cli.conns, bufCon)
