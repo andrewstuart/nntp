@@ -2,11 +2,25 @@ package nntp
 
 import "fmt"
 
+type connErr struct {
+	code   int
+	reason string
+}
+
+func (c connErr) Error() string {
+	return fmt.Sprintf("%d: %s", c.code, c.reason)
+}
+
 const (
 	//https://tools.ietf.org/html/rfc4643
 	AuthAccepted   = 281
 	PasswordNeeded = 381
+	AuthNeeded     = 480
 	AuthRejected   = 481
+)
+
+var (
+	TooManyConnections = connErr{502, "Too many connections"}
 )
 
 func (c *connection) Auth(user, pass string) error {
@@ -33,10 +47,14 @@ func (c *connection) Auth(user, pass string) error {
 		}
 
 		switch r.Code {
+		case TooManyConnections.code:
+			return TooManyConnections
 		case AuthAccepted:
 			return nil
 		case AuthRejected:
 			return fmt.Errorf("Authentication Rejected")
+		default:
+			return fmt.Errorf("Unexpected code: %v", r)
 		}
 	}
 

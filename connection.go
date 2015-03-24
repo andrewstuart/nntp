@@ -14,12 +14,10 @@ type connection struct {
 }
 
 func newConnection(rw io.ReadWriter) *connection {
-	c := connection{
+	return &connection{
 		io.Writer(rw),
 		bufio.NewReader(rw),
 	}
-
-	return &c
 }
 
 //init sets up a connection to the server
@@ -32,6 +30,7 @@ func (cli *Client) getConn() (*connection, error) {
 			return <-cli.cBucket, nil
 		}
 	}
+
 	//If a connection wasn't already available and we aren't yet over our limit,
 	//make a new connection and return it
 
@@ -55,6 +54,10 @@ func (cli *Client) getConn() (*connection, error) {
 	err = bufCon.Auth(cli.Username, cli.Password)
 
 	if err != nil {
+		if err == TooManyConnections {
+			return <-cli.cBucket, nil
+		}
+
 		return nil, fmt.Errorf("error authenticating: %v", err)
 	}
 
@@ -66,7 +69,7 @@ func (cli *Client) getConn() (*connection, error) {
 		}
 
 		if res.Code != GroupJoined {
-			fmt.Errorf("could not join group %s: %v", cli.CurrGroup, res.Message)
+			return nil, fmt.Errorf("could not join group %s: %v", cli.CurrGroup, res.Message)
 		}
 	}
 
