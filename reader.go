@@ -23,12 +23,11 @@ func (b body) Read(p []byte) (int, error) {
 		return written, io.EOF
 	}
 
-	for written < len(p) && b.br.Buffered() > 0 {
-		bs, err := b.br.ReadBytes('\n')
+	var bs []byte
+	var err error
 
-		if err != nil {
-			return written, err
-		}
+	for written < len(p) {
+		bs, err = b.br.ReadBytes('\n')
 
 		if bytes.Equal(bs, []byte(EndLine)) {
 			b.eof = true
@@ -43,13 +42,13 @@ func (b body) Read(p []byte) (int, error) {
 
 		n := copy(p[written:], bs)
 		written += n
+
+		if err != nil {
+			break
+		}
 	}
 
-	if written == 0 && b.br.Buffered() == 0 {
-		return written, io.ErrUnexpectedEOF
-	}
-
-	return written, nil
+	return written, err
 }
 
 func NewArticleReader(r io.Reader) io.Reader {
