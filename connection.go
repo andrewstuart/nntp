@@ -10,7 +10,7 @@ import (
 //a connection is a buffered reader and unbuffered writer
 type connection struct {
 	io.Writer
-	*bufio.Reader
+	br *bufio.Reader
 }
 
 func newConnection(rw io.ReadWriter) *connection {
@@ -43,7 +43,7 @@ func (cli *Client) getConn() (*connection, error) {
 	bufCon := newConnection(conn)
 
 	//Drop hello
-	_, err = bufCon.ReadBytes('\n')
+	_, err = bufCon.br.ReadBytes('\n')
 
 	if err != nil {
 		return nil, fmt.Errorf("Error reading WELCOME message: %v", err)

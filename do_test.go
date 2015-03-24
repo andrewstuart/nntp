@@ -33,7 +33,7 @@ func TestDo(t *testing.T) {
 		t.Errorf("message")
 	}
 
-	s, err := res.conn.ReadString('\n')
+	s, err := res.conn.br.ReadString('\n')
 
 	if err != nil {
 		t.Errorf("M2")

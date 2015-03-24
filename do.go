@@ -23,7 +23,7 @@ func (c *connection) do(cmd string, args ...interface{}) (*Response, error) {
 		return nil, err
 	}
 
-	s, err := c.ReadString('\n')
+	s, err := c.br.ReadString('\n')
 	if err != nil {
 		return nil, err
 	}

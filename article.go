@@ -19,6 +19,11 @@ type Article struct {
 
 func (a *Article) getHeaders() error {
 	b := bufio.NewReader(a.Body)
+
+	if a.Headers == nil {
+		a.Headers = make(map[string]string)
+	}
+
 	for {
 		s, err := b.ReadString('\n')
 
@@ -70,7 +75,7 @@ func (cli *Client) GetArticle(id string) (*Article, error) {
 
 	switch res.Code {
 	case ArticleFound:
-		bdy := NewArticleReader(conn)
+		bdy := NewArticleReader(conn.br)
 
 		art, err := NewArticle(bdy)
 

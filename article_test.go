@@ -30,6 +30,10 @@ func TestArticleGetter(t *testing.T) {
 
 	r, err := d.GetArticle("foo")
 
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if r.Headers["Foo"] != "Bar" {
 		t.Errorf("Headers were read improperly")
 	}

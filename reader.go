@@ -3,7 +3,6 @@ package nntp
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"sync"
 )
@@ -18,52 +17,55 @@ type body struct {
 }
 
 func (b body) Read(p []byte) (int, error) {
+	written := 0
+
 	if b.eof {
-		return 0, io.EOF
+		return written, io.EOF
 	}
 
-	if b.br == nil {
-		return 0, io.ErrClosedPipe
+	for written < len(p) && b.br.Buffered() > 0 {
+		bt, err := b.br.ReadByte()
+
+		if err != nil {
+			return written, err
+		}
+
+		switch bt {
+		case '.':
+			if bs, err := b.br.Peek(2); err == nil {
+				if bytes.Equal(bs, []byte("\r\n")) {
+					b.br.ReadByte()
+					b.br.ReadByte()
+					b.eof = true
+					b.done.Done()
+					return written, io.EOF
+				} else if bs[0] == '.' {
+					b.br.ReadByte()
+					//Go back to copying
+					break
+				}
+			}
+		case '\r':
+			bt, err = b.br.ReadByte()
+
+			if err != nil {
+				return written, err
+			}
+		}
+
+		p[written] = bt
+		written++
 	}
-
-	//Read until newline
-	bs, err := b.br.ReadBytes('\n')
-
-	if err != nil {
-		return 0, fmt.Errorf("error reading bytes: %v", err)
-	}
-
-	//Check EOF
-	if bytes.Equal(bs, []byte(EndLine)) {
-		b.done.Done()
-		b.eof = true
-		return 0, io.EOF
-	}
-
-	//Remove silly carriage returns
-	if len(bs) > 2 && bs[len(bs)-2] == '\r' {
-		//Remove last byte
-		bs = bs[:len(bs)-1]
-		//Change new last byte to \n
-		bs[len(bs)-1] = '\n'
-	}
-
-	//Drop leading first byte if needed
-	if len(bs) > 2 && bytes.Equal(bs, []byte("..")) {
-		bs = bs[1:]
-	}
-
-	//Copy and return
-	return copy(p, bs), nil
+	return written, nil
 }
 
 func NewArticleReader(r io.Reader) io.Reader {
 	var br *bufio.Reader
+
 	switch r := r.(type) {
 	case *body:
 		return r
 	case *bufio.Reader:
-		//*connection goes here??
 		br = r
 	default:
 		br = bufio.NewReader(r)
