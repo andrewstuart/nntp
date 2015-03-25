@@ -18,6 +18,19 @@ type body struct {
 	eof, nl bool
 }
 
+func newBody(r io.Reader) *body {
+	if r, isBody := r.(*body); isBody {
+		return r
+	}
+
+	b := body{
+		br:   bufio.NewReader(r),
+		done: &sync.WaitGroup{},
+	}
+	b.done.Add(1)
+	return &b
+}
+
 func (b *body) Read(p []byte) (int, error) {
 	written := 0
 	var err error
@@ -71,18 +84,5 @@ readLoop:
 }
 
 func NewReader(r io.Reader) io.Reader {
-	var br *bufio.Reader
-
-	if r, isBody := r.(*body); isBody {
-		return r
-	}
-
-	br = bufio.NewReader(r)
-
-	b := body{
-		br:   br,
-		done: &sync.WaitGroup{},
-	}
-	b.done.Add(1)
-	return &b
+	return newBody(r)
 }
