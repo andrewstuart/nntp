@@ -9,7 +9,6 @@ import (
 type Response struct {
 	Code    int
 	Message string
-	conn    *connection
 }
 
 func (r *Response) String() string {
@@ -44,9 +43,13 @@ func (c *connection) do(cmd string, args ...interface{}) (*Response, error) {
 	return &r, nil
 }
 
-func (cli *Client) do(cmd string, args ...interface{}) (*Response, error) {
+func (cli *Client) Do(cmd string, args ...interface{}) (*Response, error) {
 	//Get a connection from the pool
 	conn, err := cli.getConn()
+	//Don't forget to put it back
+	defer func() {
+		cli.cBucket <- conn
+	}()
 
 	if err != nil {
 		return nil, fmt.Errorf("error making connection: %v", err)
@@ -58,9 +61,6 @@ func (cli *Client) do(cmd string, args ...interface{}) (*Response, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error executing command: %v", err)
 	}
-
-	//Return with a reference to the connection. (Smells funny)
-	res.conn = conn
 
 	return res, nil
 }

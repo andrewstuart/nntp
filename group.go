@@ -8,11 +8,7 @@ const (
 )
 
 func (cli *Client) JoinGroup(id string) error {
-	r, err := cli.do("GROUP %s", id)
-
-	defer func() {
-		cli.cBucket <- r.conn
-	}()
+	r, err := cli.Do("GROUP %s", id)
 
 	if err != nil {
 		return fmt.Errorf("error doing group cmd: %v", err)
