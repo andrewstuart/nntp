@@ -26,10 +26,12 @@ func (cli *Client) getConn() (*connection, error) {
 	case c := <-cli.cBucket:
 		return c, nil
 	default:
-		if len(cli.conns) >= cli.Connections {
+		if cli.nConns >= cli.Connections {
 			return <-cli.cBucket, nil
 		}
 	}
+
+	cli.nConns++
 
 	//If a connection wasn't already available and we aren't yet over our limit,
 	//make a new connection and return it
@@ -38,6 +40,7 @@ func (cli *Client) getConn() (*connection, error) {
 	conn, err := net.Dial("tcp", server)
 
 	if err != nil {
+		cli.nConns--
 		return nil, fmt.Errorf("tcp error: %v", err)
 	}
 
@@ -47,6 +50,7 @@ func (cli *Client) getConn() (*connection, error) {
 	_, err = bufCon.br.ReadBytes('\n')
 
 	if err != nil {
+		cli.nConns--
 		return nil, fmt.Errorf("error reading WELCOME message: %v", err)
 	}
 
@@ -54,6 +58,7 @@ func (cli *Client) getConn() (*connection, error) {
 	err = bufCon.Auth(cli.Username, cli.Password)
 
 	if err != nil {
+		cli.nConns--
 		if err == TooManyConnections {
 			return <-cli.cBucket, nil
 		}
@@ -65,10 +70,12 @@ func (cli *Client) getConn() (*connection, error) {
 		res, err := bufCon.do("GROUP %s", cli.CurrGroup)
 
 		if err != nil {
+			cli.nConns--
 			return nil, fmt.Errorf("error connecting to group: %v", err)
 		}
 
 		if res.Code != GroupJoined {
+			cli.nConns--
 			return nil, fmt.Errorf("could not join group %s: %v", cli.CurrGroup, res.Message)
 		}
 	}

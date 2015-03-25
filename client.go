@@ -6,6 +6,7 @@ type Client struct {
 	Port, Connections, Retention, Timeout int
 	cBucket                               chan *connection
 	conns                                 []*connection
+	nConns                                int
 	compression                           bool
 }
 
