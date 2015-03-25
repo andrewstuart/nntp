@@ -15,7 +15,7 @@ func (cli *Client) JoinGroup(id string) error {
 	}()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error doing group cmd: %v", err)
 	}
 
 	switch r.Code {

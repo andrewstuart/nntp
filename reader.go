@@ -49,6 +49,7 @@ readLoop:
 					b.eof = true
 					b.done.Done()
 					err = io.EOF
+					b.br.ReadBytes('\n')
 					break readLoop
 				} else {
 					b.nl = false
