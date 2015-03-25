@@ -13,63 +13,77 @@ var EndBytes = []byte(EndLine)
 
 //body is an io.Reader that will
 type body struct {
-	br   *bufio.Reader
-	done *sync.WaitGroup
-	eof  bool
+	br      *bufio.Reader
+	done    *sync.WaitGroup
+	eof, nl bool
 }
 
 func (b *body) Read(p []byte) (int, error) {
 	written := 0
-
-	if b.eof {
-		return written, io.EOF
-	}
-
-	var bs []byte
 	var err error
 
-	for written < len(p) {
-		bs, err = b.br.ReadBytes('\n')
-
-		if bytes.Equal(bs, EndBytes) {
-			b.eof = true
-			b.done.Done()
-			return written, io.EOF
-		}
-
-		if len(bs) > 2 && bs[len(bs)-2] == '\r' {
-			bs = bs[:len(bs)-1]
-			bs[len(bs)-1] = '\n'
-		}
-
-		if len(bs) > 1 && bs[0] == '.' {
-			bs = bs[1:]
-		}
-
-		n := copy(p[written:], bs)
-		written += n
-
-		if err != nil {
-			break
-		}
+	if b.eof {
+		err = io.EOF
 	}
 
+	var bt byte
+readLoop:
+	for err == nil && written < len(p) {
+		bt, err = b.br.ReadByte()
+
+		if err != nil {
+			break readLoop
+		}
+
+		switch bt {
+		case '.':
+			if b.nl {
+				var bs []byte
+				bs, err = b.br.Peek(2)
+
+				if err != nil {
+					break readLoop
+				}
+
+				if bytes.Equal(bs, []byte("\r\n")) {
+					b.eof = true
+					b.done.Done()
+					err = io.EOF
+					break readLoop
+				} else {
+					b.nl = false
+					continue
+				}
+			}
+		case '\n':
+			b.nl = true
+		case '\r':
+			continue readLoop
+		}
+
+		p[written] = bt
+		written++
+
+		if bt != '\n' {
+			b.nl = false
+		}
+	}
 	return written, err
 }
 
-func NewArticleReader(r io.Reader) io.Reader {
+func NewReader(r io.Reader) io.Reader {
 	var br *bufio.Reader
 
-	switch r := r.(type) {
-	case *body:
+	if r, isBody := r.(*body); isBody {
 		return r
-	case *bufio.Reader:
-		br = r
-	default:
-		br = bufio.NewReader(r)
 	}
 
-	b := body{br, &sync.WaitGroup{}, false}
+	br = bufio.NewReader(r)
+
+	b := body{
+		br:   br,
+		done: &sync.WaitGroup{},
+	}
 	b.done.Add(1)
 	return &b
 }

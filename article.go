@@ -35,7 +35,7 @@ func (a *Article) getHeaders() error {
 
 		//Blank line inidicates start of body
 		if s == "" {
-			return nil
+			break
 		}
 
 		hparts := strings.Split(s, ": ")
@@ -70,12 +70,12 @@ func (cli *Client) GetArticle(id string) (*Article, error) {
 
 	res, err := conn.do("ARTICLE <%s>", id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("article retrieval error: %v", err)
 	}
 
 	switch res.Code {
 	case ArticleFound:
-		bdy := NewArticleReader(conn.br)
+		bdy := NewReader(conn.br)
 
 		art, err := NewArticle(bdy)
 

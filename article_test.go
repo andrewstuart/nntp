@@ -13,11 +13,6 @@ type testrw struct {
 	io.Reader
 }
 
-var trw = testrw{
-	&bytes.Buffer{},
-	strings.NewReader("220 found\r\nFoo: Bar\r\n\r\ntest\r\n.\r\n"),
-}
-
 func TestArticleGetter(t *testing.T) {
 	d := &Client{
 		Connections: 1,
@@ -26,12 +21,17 @@ func TestArticleGetter(t *testing.T) {
 		cBucket:     make(chan *connection, 1),
 	}
 
-	d.cBucket <- newConnection(trw)
+	buf := &bytes.Buffer{}
+
+	d.cBucket <- newConnection(testrw{
+		Writer: buf,
+		Reader: strings.NewReader(testServer2),
+	})
 
 	r, err := d.GetArticle("foo")
 
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("failed to get article: %v", err)
 	}
 
 	if r.Headers["Foo"] != "Bar" {
@@ -50,13 +50,26 @@ func TestArticleGetter(t *testing.T) {
 		t.Fatalf("error reading string: %v", err)
 	}
 
-	if strings.TrimSpace(s) != "test" {
-		t.Errorf("Wrong string read")
+	if s != "test\n" {
+		t.Errorf("Wrong string read -> %s", s)
+	}
+
+	if s, err = bufr.ReadString('\n'); err != nil {
+		t.Errorf("String was not read: %v", err)
+	} else if s != ".foo\n" {
+		t.Errorf("Wrong string read: len: %d, %s", len(s), s)
 	}
 
 	s, err = bufr.ReadString('\n')
 
 	if err != io.EOF {
-		t.Errorf("Did not read EOF properly")
+		t.Errorf("Missed eof: %s", s)
 	}
 }
+
+var testServer2 = strings.Replace(`220 found
+Foo: Bar
+
+test
+..foo
+`, "\n", "\r\n", -1)
