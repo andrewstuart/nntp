@@ -50,13 +50,13 @@ func TestArticleGetter(t *testing.T) {
 		t.Fatalf("error reading string: %v", err)
 	}
 
-	if s != "test\n" {
+	if s != "test\r\n" {
 		t.Errorf("Wrong string read -> %s", s)
 	}
 
 	if s, err = bufr.ReadString('\n'); err != nil {
 		t.Errorf("String was not read: %v", err)
-	} else if s != ".foo\n" {
+	} else if s != ".foo\r\n" {
 		t.Errorf("Wrong string read: len: %d, %s", len(s), s)
 	}
 

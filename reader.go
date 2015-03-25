@@ -58,8 +58,6 @@ readLoop:
 			}
 		case '\n':
 			b.nl = true
-		case '\r':
-			continue readLoop
 		}
 
 		p[written] = bt

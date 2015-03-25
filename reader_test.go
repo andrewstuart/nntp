@@ -1,6 +1,7 @@
 package nntp
 
 import (
+	"bytes"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -15,11 +16,12 @@ func TestReader(t *testing.T) {
 		t.Fatalf("error while reading: %v")
 	}
 
-	t.Log(string(bs))
-
+	if bytes.Contains(bs, []byte("..Whodunit")) {
+		t.Errorf("Double dot should have been escaped")
+	}
 }
 
-var readerTest = `
+var readerTest = strings.Replace(`
 Header1: Foo
 Header2: Bar
 Header3: Baz
@@ -27,4 +29,4 @@ Header3: Baz
 ..Whodunit
 This is the question
 I don't really know
-.` + "\r\n"
+.`, "\n", "\r\n", -1)
