@@ -9,6 +9,8 @@ import (
 
 const EndLine = ".\r\n"
 
+var EndBytes = []byte(EndLine)
+
 //body is an io.Reader that will
 type body struct {
 	br   *bufio.Reader
@@ -29,15 +31,19 @@ func (b *body) Read(p []byte) (int, error) {
 	for written < len(p) {
 		bs, err = b.br.ReadBytes('\n')
 
-		if bytes.Equal(bs, []byte(EndLine)) {
+		if bytes.Equal(bs, EndBytes) {
 			b.eof = true
 			b.done.Done()
 			return written, io.EOF
 		}
 
 		if len(bs) > 2 && bs[len(bs)-2] == '\r' {
-			bs[len(bs)-2] = '\n'
 			bs = bs[:len(bs)-1]
+			bs[len(bs)-1] = '\n'
+		}
+
+		if len(bs) > 1 && bs[0] == '.' {
+			bs = bs[1:]
 		}
 
 		n := copy(p[written:], bs)
