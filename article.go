@@ -86,16 +86,16 @@ func (cli *Client) GetArticle(id string) (*Article, error) {
 		if b, isBody := bdy.(*body); isBody {
 			go func() {
 				b.done.Wait()
-				cli.cBucket <- conn
+				cli.pool <- conn
 			}()
 		}
 
 		return art, nil
 	case NoArticleWithId:
-		cli.cBucket <- conn
+		cli.pool <- conn
 		return nil, fmt.Errorf("no article with ID %s founc. Server says: %v", id, res)
 	}
 
-	cli.cBucket <- conn
+	cli.pool <- conn
 	return nil, fmt.Errorf("unexpected response: %s", res)
 }

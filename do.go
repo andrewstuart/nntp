@@ -54,7 +54,7 @@ func (cli *Client) Do(cmd string, args ...interface{}) (*Response, error) {
 	res, err := conn.do(cmd, args...)
 
 	defer func() {
-		cli.cBucket <- conn
+		cli.pool <- conn
 	}()
 
 	if err != nil {

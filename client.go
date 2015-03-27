@@ -4,10 +4,10 @@ package nntp
 type Client struct {
 	Server, Username, Password, CurrGroup string
 	Port, Connections, Retention, Timeout int
-	cBucket                               chan *connection
-	conns                                 []*connection
-	nConns                                int
 	compression                           bool
+
+	pool   chan *connection
+	nConns int
 }
 
 //NewClient returns a pointer to a downloader
@@ -20,8 +20,7 @@ func NewClient(s string, port, conns int) *Client {
 		Server:      s,
 		Port:        port,
 		Connections: conns,
-		cBucket:     make(chan *connection, conns),
-		conns:       make([]*connection, 0, conns),
+		pool:        make(chan *connection, conns),
 	}
 
 	return &cli

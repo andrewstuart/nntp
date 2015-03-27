@@ -23,11 +23,11 @@ func newConnection(rw io.ReadWriter) *connection {
 //init sets up a connection to the server
 func (cli *Client) getConn() (*connection, error) {
 	select {
-	case c := <-cli.cBucket:
+	case c := <-cli.pool:
 		return c, nil
 	default:
 		if cli.nConns >= cli.Connections {
-			return <-cli.cBucket, nil
+			return <-cli.pool, nil
 		}
 	}
 
@@ -60,7 +60,7 @@ func (cli *Client) getConn() (*connection, error) {
 	if err != nil {
 		cli.nConns--
 		if err == TooManyConnections {
-			return <-cli.cBucket, nil
+			return <-cli.pool, nil
 		}
 
 		return nil, fmt.Errorf("error authenticating: %v", err)
@@ -80,6 +80,5 @@ func (cli *Client) getConn() (*connection, error) {
 		}
 	}
 
-	cli.conns = append(cli.conns, bufCon)
 	return bufCon, nil
 }

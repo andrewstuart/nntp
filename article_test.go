@@ -18,12 +18,12 @@ func TestArticleGetter(t *testing.T) {
 		Connections: 1,
 		Username:    "andrew",
 		Password:    "1234",
-		cBucket:     make(chan *connection, 1),
+		pool:        make(chan *connection, 1),
 	}
 
 	buf := &bytes.Buffer{}
 
-	d.cBucket <- newConnection(testrw{
+	d.pool <- newConnection(testrw{
 		Writer: buf,
 		Reader: strings.NewReader(testServer2),
 	})

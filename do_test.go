@@ -16,12 +16,12 @@ func TestDo(t *testing.T) {
 		Connections: 1,
 		Username:    "andrew",
 		Password:    "test",
-		cBucket:     make(chan *connection, 1),
+		pool:        make(chan *connection, 1),
 	}
 
 	c := newConnection(trw2)
 
-	cli.cBucket <- c
+	cli.pool <- c
 
 	//TODO use res
 	_, err := cli.Do("FOO")
