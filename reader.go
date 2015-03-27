@@ -31,21 +31,17 @@ func newBody(r io.Reader) *body {
 	return &b
 }
 
-func (b *body) Read(p []byte) (int, error) {
-	written := 0
-	var err error
-
+func (b *body) Read(p []byte) (written int, err error) {
 	if b.eof {
 		err = io.EOF
 	}
 
 	var bt byte
-readLoop:
 	for err == nil && written < len(p) {
 		bt, err = b.br.ReadByte()
 
 		if err != nil {
-			break readLoop
+			return
 		}
 
 		switch bt {
@@ -55,15 +51,15 @@ readLoop:
 				bs, err = b.br.Peek(2)
 
 				if err != nil {
-					break readLoop
+					return
 				}
 
-				if bytes.Equal(bs, []byte("\r\n")) {
+				if bytes.Equal(bs, []byte("\r\n")) || bs[0] == '\n' {
 					b.eof = true
 					b.done.Done()
 					err = io.EOF
 					b.br.ReadBytes('\n')
-					break readLoop
+					return
 				} else {
 					b.nl = false
 					continue
@@ -80,7 +76,7 @@ readLoop:
 			b.nl = false
 		}
 	}
-	return written, err
+	return
 }
 
 func NewReader(r io.Reader) io.Reader {
