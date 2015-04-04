@@ -13,7 +13,7 @@ func (c *Conn) Read(p []byte) (n int, err error) {
 	return
 }
 
-func (c *Conn) Do(format string, is ...interface{}) *Reader {
+func (c *Conn) Do(format string, is ...interface{}) *Response {
 	cmd := fmt.Sprintf(format, is...)
 	fmt.Fprintf(c, "%s\r\n", cmd)
 	return nil

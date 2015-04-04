@@ -17,9 +17,10 @@ const (
 	PasswordNeeded = 381
 	AuthNeeded     = 480
 	AuthRejected   = 481
+	TooManyConns   = 502
 )
 
 var (
-	TooManyConnections = ConnErr{502, "too many connections"}
-	BadPassword        = ConnErr{481, "credentials rejected"}
+	ErrTooManyConns = ConnErr{TooManyConns, "too many connections"}
+	ErrAuthRejected = ConnErr{AuthRejected, "credentials rejected"}
 )
