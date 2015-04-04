@@ -1,9 +1,6 @@
 package nntp
 
-import (
-	"fmt"
-	"io"
-)
+import "fmt"
 
 type Conn struct {
 }
@@ -16,7 +13,7 @@ func (c *Conn) Read(p []byte) (n int, err error) {
 	return
 }
 
-func (c *Conn) do(format string, is ...interface{}) io.ReadCloser {
+func (c *Conn) Do(format string, is ...interface{}) *Reader {
 	cmd := fmt.Sprintf(format, is...)
 	fmt.Fprintf(c, "%s\r\n", cmd)
 	return nil
