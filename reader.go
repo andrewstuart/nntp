@@ -56,9 +56,9 @@ func (b *body) Read(p []byte) (written int, err error) {
 
 				if bytes.Equal(bs, []byte("\r\n")) || bs[0] == '\n' {
 					b.eof = true
-					b.done.Done()
 					err = io.EOF
 					b.br.ReadBytes('\n')
+					defer b.done.Done()
 					return
 				} else {
 					b.nl = false
