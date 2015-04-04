@@ -1,10 +1,8 @@
 package nntp
 
 import (
-	"bufio"
-	"fmt"
 	"io"
-	"strings"
+	"net/http"
 )
 
 const (
@@ -13,89 +11,21 @@ const (
 )
 
 type Article struct {
-	Headers map[string]string
-	Body    io.Reader
+	Headers http.Header
+	Body    io.ReadCloser
 }
 
 func (a *Article) getHeaders() error {
-	b := bufio.NewReader(a.Body)
-
-	if a.Headers == nil {
-		a.Headers = make(map[string]string)
-	}
-
-	for {
-		s, err := b.ReadString('\n')
-
-		if err != nil {
-			return err
-		}
-
-		s = strings.TrimSpace(s)
-
-		//Blank line inidicates start of body
-		if s == "" {
-			break
-		}
-
-		hparts := strings.Split(s, ": ")
-
-		if len(hparts) > 1 {
-			a.Headers[hparts[0]] = hparts[1]
-		}
-	}
-	a.Body = b
-
+	//TODO
 	return nil
 }
 
 func NewArticle(r io.Reader) (*Article, error) {
-	a := Article{make(map[string]string), bufio.NewReader(r)}
-
-	if err := a.getHeaders(); err != nil {
-		return nil, fmt.Errorf("error reading headers: %v", err)
-	}
-
-	return &a, nil
+	//TODO
+	return nil, nil
 }
 
-//GetArticle returns a reader for the article, or an error indicating the reason an article
-//could not be founc.
-func (cli *Client) GetArticle(id string) (*Article, error) {
-	conn, err := cli.getConn()
-
-	if err != nil {
-		return nil, fmt.Errorf("error getting connection from pool: %v", err)
-	}
-
-	res, err := conn.do("ARTICLE <%s>", id)
-	if err != nil {
-		return nil, fmt.Errorf("article retrieval error: %v", err)
-	}
-
-	switch res.Code {
-	case ArticleFound:
-		bdy := NewReader(conn.br)
-
-		art, err := NewArticle(bdy)
-
-		if err != nil {
-			return nil, fmt.Errorf("header error: %v", err)
-		}
-
-		if b, isBody := bdy.(*body); isBody {
-			go func() {
-				b.done.Wait()
-				cli.pool <- conn
-			}()
-		}
-
-		return art, nil
-	case NoArticleWithId:
-		cli.pool <- conn
-		return nil, fmt.Errorf("no article with ID %s founc. Server says: %v", id, res)
-	}
-
-	cli.pool <- conn
-	return nil, fmt.Errorf("unexpected response: %s", res)
+func GetArticle(id string) (*Article, error) {
+	//TODO
+	return nil, nil
 }

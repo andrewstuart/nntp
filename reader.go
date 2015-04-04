@@ -4,34 +4,29 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"sync"
 )
 
 const EndLine = ".\r\n"
 
 var EndBytes = []byte(EndLine)
 
-//body is an io.Reader that will
-type body struct {
+type Reader struct {
 	br      *bufio.Reader
-	done    *sync.WaitGroup
 	eof, nl bool
 }
 
-func newBody(r io.Reader) *body {
-	if r, isBody := r.(*body); isBody {
+func NewReader(r io.Reader) *Reader {
+	switch r := r.(type) {
+	case *Reader:
 		return r
+	default:
+		return &Reader{
+			br: bufio.NewReader(r),
+		}
 	}
-
-	b := body{
-		br:   bufio.NewReader(r),
-		done: &sync.WaitGroup{},
-	}
-	b.done.Add(1)
-	return &b
 }
 
-func (b *body) Read(p []byte) (written int, err error) {
+func (b *Reader) Read(p []byte) (written int, err error) {
 	if b.eof {
 		err = io.EOF
 	}
@@ -58,7 +53,6 @@ func (b *body) Read(p []byte) (written int, err error) {
 					b.eof = true
 					err = io.EOF
 					b.br.ReadBytes('\n')
-					defer b.done.Done()
 					return
 				} else {
 					b.nl = false
@@ -77,8 +71,4 @@ func (b *body) Read(p []byte) (written int, err error) {
 		}
 	}
 	return
-}
-
-func NewReader(r io.Reader) io.Reader {
-	return newBody(r)
 }
