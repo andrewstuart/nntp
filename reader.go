@@ -13,6 +13,7 @@ var EndBytes = []byte(EndLine)
 type Reader struct {
 	br      *bufio.Reader
 	eof, nl bool
+	c       io.Closer
 }
 
 func NewReader(r io.Reader) *Reader {
@@ -20,9 +21,15 @@ func NewReader(r io.Reader) *Reader {
 	case *Reader:
 		return r
 	default:
-		return &Reader{
+		rr := Reader{
 			br: bufio.NewReader(r),
 		}
+
+		if c, canClose := r.(io.Closer); canClose {
+			rr.c = c
+		}
+
+		return &rr
 	}
 }
 
@@ -71,4 +78,7 @@ func (r *Reader) Read(p []byte) (written int, err error) {
 		}
 	}
 	return
+}
+
+func (r *Reader) Close() error {
 }
