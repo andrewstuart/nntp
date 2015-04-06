@@ -35,6 +35,8 @@ type Response struct {
 }
 
 func NewResponse(r io.Reader) (*Response, error) {
+	//TODO is there a better way to make sure underlying reader isn't drained by
+	//bufio?
 	var br *bufio.Reader
 	bdy := &body{}
 
