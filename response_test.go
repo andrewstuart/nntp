@@ -2,7 +2,6 @@ package nntp
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"net/textproto"
 	"strings"
@@ -52,8 +51,6 @@ func TestResponse(t *testing.T) {
 	}
 
 	bs, err := ioutil.ReadAll(res.Body)
-
-	fmt.Println(string(bs))
 
 	if err != nil {
 		t.Errorf("error reading body: %v", err)

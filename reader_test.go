@@ -1,13 +1,14 @@
 package nntp
 
 import (
+	"bufio"
 	"io/ioutil"
 	"strings"
 	"testing"
 )
 
 func TestReader(t *testing.T) {
-	r := NewReader(strings.NewReader(readerTest))
+	r := NewReader(bufio.NewReader(strings.NewReader(readerTest)))
 
 	bs, err := ioutil.ReadAll(r)
 

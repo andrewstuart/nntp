@@ -35,13 +35,12 @@ type Response struct {
 }
 
 func NewResponse(r io.Reader) (*Response, error) {
-	//TODO is there a better way to make sure underlying reader isn't drained by
-	//bufio?
-	var br *bufio.Reader
+	br := bufio.NewReader(r)
 	bdy := &body{}
 
 	//Normalize to *Reader
 	switch r := r.(type) {
+
 	case (*Reader):
 		br = bufio.NewReader(r)
 		bdy.c = r.c
