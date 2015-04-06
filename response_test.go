@@ -1,6 +1,7 @@
 package nntp
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -35,7 +36,8 @@ func TestResponse(t *testing.T) {
 	for k, v := range a {
 		h := res.Headers[k]
 		if len(h) < 1 {
-			t.Fatalf("Wrong number of headers for key %s: %d", k, len(h))
+			t.Errorf("Wrong number of headers for key %s: %d", k, len(h))
+			continue
 		}
 
 		if h[0] != v {
@@ -44,6 +46,8 @@ func TestResponse(t *testing.T) {
 	}
 
 	bs, err := ioutil.ReadAll(res.Body)
+
+	fmt.Println(string(bs))
 
 	if err != nil {
 		t.Errorf("error reading body: %v", err)
@@ -55,8 +59,15 @@ func TestResponse(t *testing.T) {
 		t.Fatalf("Wrong number of lines in Body")
 	}
 
-	if strAr[1] != ".Foo man chu\r" {
-		t.Errorf("Wrong body: %s", strAr[1])
+	tstr := ".Foo man chu\r"
+	if strAr[1] != tstr {
+		t.Errorf("Wrong .. line in body: %q, should be %q", strAr[1], tstr)
+	}
+
+	err = res.Body.Close()
+
+	if err != nil {
+		t.Errorf("error closing body: %v", err)
 	}
 }
 

@@ -14,6 +14,18 @@ var (
 	IllegalHeader   = fmt.Errorf("illegal headers")
 )
 
+type body struct {
+	io.Reader
+	c io.Closer
+}
+
+func (b *body) Close() error {
+	if b.c != nil {
+		return b.c.Close()
+	}
+	return nil
+}
+
 type Response struct {
 	Code    int                  `json:"code"xml:"code"`
 	Message string               `json:"message"xml:"message"`
@@ -24,11 +36,13 @@ type Response struct {
 
 func NewResponse(r io.Reader) (*Response, error) {
 	var br *bufio.Reader
+	bdy := &body{}
 
 	//Normalize to *Reader
 	switch r := r.(type) {
 	case (*Reader):
 		br = bufio.NewReader(r)
+		bdy.c = r.c
 	default:
 		br = bufio.NewReader(NewReader(r))
 	}
@@ -64,7 +78,9 @@ func NewResponse(r io.Reader) (*Response, error) {
 	}
 
 	res.Headers = h
-	res.Body = NewReader(br)
+
+	bdy.Reader = br
+	res.Body = bdy
 
 	return res, nil
 }
