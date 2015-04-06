@@ -11,8 +11,8 @@ func (c ConnErr) Error() string {
 	return fmt.Sprintf("%d: %s", c.Code, c.Reason)
 }
 
+//https://tools.ietf.org/html/rfc4643
 const (
-	//https://tools.ietf.org/html/rfc4643
 	AuthAccepted   = 281
 	PasswordNeeded = 381
 	AuthNeeded     = 480

@@ -1,16 +1,23 @@
 package nntp
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"net"
+)
 
 type Conn struct {
+	*Reader
+	io.Writer
+	cls chan bool
 }
 
-func (c *Conn) Write(p []byte) (int, error) {
-	return 0, nil
-}
-
-func (c *Conn) Read(p []byte) (n int, err error) {
-	return
+func NewConn(c net.Conn) io.ReadWriteCloser {
+	return &Conn{
+		Reader: NewReader(bufio.NewReader(c)),
+		Writer: io.Writer(c),
+	}
 }
 
 func (c *Conn) Do(format string, is ...interface{}) *Response {

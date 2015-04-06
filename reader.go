@@ -82,22 +82,25 @@ func (r *Reader) Read(p []byte) (written int, err error) {
 	return
 }
 
+//Close allows users of a Reader to signal that they are done using the reader.
 func (r *Reader) Close() error {
 	if r.c != nil {
-		return r.c.Close()
+		//TODO what should I do with this error?
+		r.c.Close()
 	}
 
-	return nil
-}
-
-//Next enables the use of io.Readers that may have multiple bodies.
-func (r *Reader) Next() (*Reader, error) {
 	if _, err := r.R.Peek(1); err != nil {
-		return nil, err
+		//Swallo io.EOF and don't reset the reader
+		if err == io.EOF {
+			return nil
+		} else {
+			return err
+		}
 	}
 
+	//Reset reader
 	r.eof = false
 	r.nl = true
 
-	return r, nil
+	return nil
 }

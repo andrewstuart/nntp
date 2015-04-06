@@ -14,23 +14,11 @@ var (
 	IllegalHeader   = fmt.Errorf("illegal headers")
 )
 
-type body struct {
-	io.Reader
-	c io.Closer
-}
-
-func (b *body) Close() error {
-	if b.c != nil {
-		return b.c.Close()
-	}
-	return nil
-}
-
 type Response struct {
 	Code    int                  `json:"code"xml:"code"`
 	Message string               `json:"message"xml:"message"`
 	Headers textproto.MIMEHeader `json:"headers"xml:"headers"`
-	Body    io.ReadCloser        `json:"body"xml:"body"`
+	Body    io.ReadCloser        `json:"body"xml:"body"` //Presence (non-nil) indicates multi-line response
 	br      *bufio.Reader
 }
 
@@ -49,20 +37,9 @@ var isMultiLine = map[int]bool{
 }
 
 func NewResponse(r io.Reader) (*Response, error) {
-	br := bufio.NewReader(r)
-	bdy := &body{}
+	nr := NewReader(r)
 
-	//Normalize to *Reader
-	switch r := r.(type) {
-
-	case (*Reader):
-		br = bufio.NewReader(r)
-		bdy.c = r.c
-	default:
-		br = bufio.NewReader(NewReader(r))
-	}
-
-	s, err := br.ReadString('\n')
+	s, err := nr.R.ReadString('\n')
 	if err != nil {
 		return nil, fmt.Errorf("error reading header: %v", err)
 	}
@@ -73,7 +50,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 	}
 
 	res := &Response{
-		br:      br,
+		br:      nr.R,
 		Headers: make(map[string][]string),
 	}
 
@@ -84,7 +61,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 		res.Message = sa[1]
 	}
 
-	tpr := textproto.NewReader(br)
+	tpr := textproto.NewReader(nr.R)
 
 	if isMultiLine[res.Code] {
 		h, err := tpr.ReadMIMEHeader()
@@ -94,9 +71,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 		}
 
 		res.Headers = h
-
-		bdy.Reader = br
-		res.Body = bdy
+		res.Body = nr
 	}
 
 	return res, nil
