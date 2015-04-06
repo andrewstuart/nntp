@@ -19,8 +19,8 @@ func TestResponse(t *testing.T) {
 		t.Errorf("error getting test response: %v", err)
 	}
 
-	if res.Code != 201 {
-		t.Errorf("Wrong response code: %d, should be 201", res.Code)
+	if res.Code != 220 {
+		t.Errorf("Wrong response code: %d, should be 220", res.Code)
 	}
 
 	if res.Message != "Foo" {
@@ -79,8 +79,8 @@ func TestResponse(t *testing.T) {
 		t.Fatalf("error getting second response: %v", err2)
 	}
 
-	if res2.Code != 202 {
-		t.Errorf("Wrong response code: %d, should be 202", res2.Code)
+	if res2.Code != 225 {
+		t.Errorf("Wrong response code: %d, should be 225", res2.Code)
 	}
 
 	r2mes := "Bar"
@@ -110,7 +110,7 @@ func checkHeaders(e map[string]string, h textproto.MIMEHeader, t *testing.T) {
 	}
 }
 
-var resString = strings.Replace(`201 Foo
+var resString = strings.Replace(`220 Foo
 Header: 1
 Header-Two: 2
 
@@ -118,7 +118,7 @@ Whatever
 ..Foo man chu
 I like this stuff
 .
-202 Bar
+225 Bar
 Header: 34
 Five-Six: 56
 

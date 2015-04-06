@@ -13,7 +13,7 @@ func TestReader(t *testing.T) {
 	bs, err := ioutil.ReadAll(r)
 
 	if err != nil {
-		t.Fatalf("error while reading: %v")
+		t.Fatalf("error while reading: %v", err)
 	}
 
 	lines := strings.Split(string(bs), "\n")

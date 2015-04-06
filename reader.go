@@ -33,6 +33,8 @@ func NewReader(r io.Reader) *Reader {
 	}
 }
 
+//The Read method handles translation of the NNTP escaping and marking EOF when
+//the end of a body is received.
 func (r *Reader) Read(p []byte) (written int, err error) {
 	if r.eof {
 		err = io.EOF

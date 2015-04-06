@@ -34,6 +34,20 @@ type Response struct {
 	br      *bufio.Reader
 }
 
+var isMultiLine = map[int]bool{
+	100: true,
+	101: true,
+	211: true,
+	215: true,
+	220: true,
+	221: true,
+	222: true,
+	224: true,
+	225: true,
+	230: true,
+	231: true,
+}
+
 func NewResponse(r io.Reader) (*Response, error) {
 	br := bufio.NewReader(r)
 	bdy := &body{}
@@ -72,16 +86,18 @@ func NewResponse(r io.Reader) (*Response, error) {
 
 	tpr := textproto.NewReader(br)
 
-	h, err := tpr.ReadMIMEHeader()
+	if isMultiLine[res.Code] {
+		h, err := tpr.ReadMIMEHeader()
 
-	if err != nil {
-		return nil, IllegalResponse
+		if err != nil {
+			return nil, IllegalResponse
+		}
+
+		res.Headers = h
+
+		bdy.Reader = br
+		res.Body = bdy
 	}
-
-	res.Headers = h
-
-	bdy.Reader = br
-	res.Body = bdy
 
 	return res, nil
 }
