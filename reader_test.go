@@ -1,7 +1,6 @@
 package nntp
 
 import (
-	"bytes"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -16,12 +15,19 @@ func TestReader(t *testing.T) {
 		t.Fatalf("error while reading: %v")
 	}
 
-	if bytes.Contains(bs, []byte("..Whodunit")) {
-		t.Errorf("Double dot should have been escaped")
+	lines := strings.Split(string(bs), "\n")
+
+	if len(lines) != 9 {
+		t.Errorf("Wrong number of lines: %d", len(lines))
+	}
+
+	dotLine := 5
+	if lines[dotLine] != ".Whodunit\r" {
+		t.Errorf("Did not properly escape double dot: %s", lines[dotLine])
 	}
 }
 
-var readerTest = strings.Replace(`
+var readerTest = strings.Replace(`201 found
 Header1: Foo
 Header2: Bar
 Header3: Baz
