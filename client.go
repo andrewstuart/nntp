@@ -18,21 +18,23 @@ type Client struct {
 }
 
 func (cli *Client) run() {
-	go func() {
-		for {
-			select {
-			case nc := <-cli.connChan:
-				if cli.nConns < cli.MaxConns {
-					conn, _ := net.Dial("tcp", fmt.Sprintf("%s:%d", cli.Server, cli.Port))
+	for {
+		select {
+		case nc := <-cli.connChan:
+			if cli.nConns < cli.MaxConns {
+				cli.nConns++
+				conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", cli.Server, cli.Port))
 
-					cli.nConns++
-					nc <- NewConn(conn)
-				} else {
+				if err != nil {
+					cli.nConns--
 					nc <- nil
 				}
+				nc <- NewConn(conn)
+			} else {
+				nc <- nil
 			}
 		}
-	}()
+	}
 }
 
 func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
@@ -60,11 +62,16 @@ func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
 	return res, nil
 }
 
-func NewClient(server string, port int) *Client {
+func NewClient(server string, port, conns int) *Client {
 	cli := Client{
-		Server: server,
-		Port:   port,
+		Server:   server,
+		Port:     port,
+		MaxConns: conns,
+		connChan: make(chan (chan *Conn)),
 	}
+
+	go cli.run()
+
 	cli.p = &sync.Pool{
 		New: func() interface{} {
 			nch := make(chan *Conn)

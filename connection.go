@@ -39,7 +39,7 @@ func (c *Conn) Close() error {
 
 func (c *Conn) Do(format string, is ...interface{}) (*Response, error) {
 	fmt.Fprintf(c, format+"\r\n", is...)
-	res, err := NewResponse(c)
+	res, err := NewResponse(c.R)
 
 	if err != nil {
 		return nil, err
