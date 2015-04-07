@@ -1,26 +1,34 @@
 package nntp
 
-import "fmt"
-
-type ConnErr struct {
-	Code   int    `json:"code"xml:"code"`
-	Reason string `json:"reason"xml:"reason"`
-}
-
-func (c ConnErr) Error() string {
-	return fmt.Sprintf("%d: %s", c.Code, c.Reason)
-}
-
 //https://tools.ietf.org/html/rfc4643
 const (
 	AuthAccepted   = 281
 	PasswordNeeded = 381
 	AuthNeeded     = 480
-	AuthRejected   = 481
-	TooManyConns   = 502
+	BadAuth        = 481
+	ConnsExceeded  = 502
 )
 
 var (
-	ErrTooManyConns = ConnErr{TooManyConns, "too many connections"}
-	ErrAuthRejected = ConnErr{AuthRejected, "credentials rejected"}
+	TooManyConns = ConnErr{ConnsExceeded, "too many connections"}
+	AuthRejected = ConnErr{BadAuth, "credentials rejected"}
 )
+
+func (cli *Client) Auth(u, p string) error {
+	cli.User = u
+	cli.Pass = p
+
+	conn := cli.p.Get().(*Conn)
+
+	res, err := conn.Do("AUTHINFO USER %s", u)
+
+	switch res.Code {
+	case AuthAccepted:
+		return nil
+	case PasswordNeeded:
+		res, err = conn.Do("AUTHINFO PASSWORD %s", p)
+	default:
+	}
+
+	return err
+}
