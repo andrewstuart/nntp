@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"strings"
 )
 
 type ConnErr struct {
@@ -16,30 +17,26 @@ func (c ConnErr) Error() string {
 }
 
 type Conn struct {
-	*Reader
+	*bufio.Reader
 	io.Writer
-	onClose func() error
-	cls     chan (chan error)
+	cls chan (chan error)
 }
 
 func NewConn(c io.ReadWriteCloser) *Conn {
 	return &Conn{
-		Reader: NewReader(bufio.NewReader(c)),
+		Reader: bufio.NewReader(c),
 		Writer: io.Writer(c),
 		cls:    make(chan (chan error)),
 	}
 }
 
 func (c *Conn) Close() error {
-	if c.onClose != nil {
-		return c.onClose()
-	}
 	return nil
 }
 
 func (c *Conn) Do(format string, is ...interface{}) (*Response, error) {
-	fmt.Fprintf(c, format+"\r\n", is...)
-	res, err := NewResponse(c.R)
+	fmt.Fprintf(c, strings.TrimSpace(format)+"\r\n", is...)
+	res, err := NewResponse(c)
 
 	if err != nil {
 		return nil, err

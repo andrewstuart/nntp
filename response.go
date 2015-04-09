@@ -37,11 +37,11 @@ var isMultiLine = map[int]bool{
 }
 
 func NewResponse(r io.Reader) (*Response, error) {
-	nr := NewReader(r)
+	br := bufio.NewReader(r)
 
-	s, err := nr.R.ReadString('\n')
+	s, err := br.ReadString('\n')
 	if err != nil {
-		return nil, fmt.Errorf("error reading header: %v", err)
+		return nil, fmt.Errorf("error reading response line: %v", err)
 	}
 
 	sa := strings.Split(strings.TrimSpace(s), " ")
@@ -50,7 +50,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 	}
 
 	res := &Response{
-		br:      nr.R,
+		br:      br,
 		Headers: make(map[string][]string),
 	}
 
@@ -61,17 +61,16 @@ func NewResponse(r io.Reader) (*Response, error) {
 		res.Message = sa[1]
 	}
 
-	tpr := textproto.NewReader(nr.R)
-
 	if isMultiLine[res.Code] {
-		h, err := tpr.ReadMIMEHeader()
 
+		tpr := textproto.NewReader(br)
+		h, err := tpr.ReadMIMEHeader()
 		if err != nil {
 			return nil, IllegalResponse
 		}
 
 		res.Headers = h
-		res.Body = nr
+		res.Body = NewReader(br)
 	}
 
 	return res, nil

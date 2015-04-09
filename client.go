@@ -2,6 +2,7 @@ package nntp
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -51,15 +52,27 @@ func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
 	}
 
 	if res.Body != nil {
-		conn.onClose = func() error {
-			cli.p.Put(conn)
-			return nil
+		res.Body = &poolBody{
+			ReadCloser: res.Body,
+			cli:        cli,
+			conn:       conn,
 		}
 	} else {
 		cli.p.Put(conn)
 	}
 
 	return res, nil
+}
+
+type poolBody struct {
+	io.ReadCloser
+	cli  *Client
+	conn *Conn
+}
+
+func (pb *poolBody) Close() error {
+	pb.cli.p.Put(pb.conn)
+	return pb.ReadCloser.Close()
 }
 
 func NewClient(server string, port, conns int) *Client {
