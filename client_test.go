@@ -2,10 +2,7 @@ package nntp
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-	"net/http"
-	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
@@ -87,13 +84,6 @@ func TestNoBody(t *testing.T) {
 	if conn := cli.p.Get(); conn == nil {
 		t.Fatalf("Could not get a connection from the pool -- should have been replaced.")
 	}
-}
-
-func TestS(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, a)
-	}))
-	defer ts.Close()
 }
 
 var testClientNoBody = "500 No Body\r\n"
