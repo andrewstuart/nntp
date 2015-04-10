@@ -23,11 +23,16 @@ type Conn struct {
 }
 
 func NewConn(c io.ReadWriteCloser) *Conn {
-	return &Conn{
+	nnConn := Conn{
 		br:  bufio.NewReader(c),
 		w:   c,
 		cls: make(chan (chan error)),
 	}
+
+	//Throw away welcome line
+	nnConn.br.ReadBytes('\n')
+
+	return &nnConn
 }
 
 func (c *Conn) Close() error {

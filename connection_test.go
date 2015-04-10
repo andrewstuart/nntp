@@ -72,7 +72,8 @@ func TestConnection(t *testing.T) {
 
 }
 
-var clientTestString string = strings.Replace(`220 okay
+var clientTestString string = strings.Replace(`Welcome
+220 okay
 H: FooBar
 
 Foo

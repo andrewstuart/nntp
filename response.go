@@ -58,7 +58,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 		return nil, fmt.Errorf("error converting response code: %v", err)
 	} else {
 		res.Code = code
-		res.Message = sa[1]
+		res.Message = strings.Join(sa[1:], " ")
 	}
 
 	if isMultiLine[res.Code] {

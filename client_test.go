@@ -98,9 +98,10 @@ func TestNoBody(t *testing.T) {
 	}
 }
 
-var testClientNoBody = "500 No Body\r\n"
+var testClientNoBody = "Welome\r\n500 No Body\r\n"
 
-var testClientResponse = strings.Replace(`220 Have Body
+var testClientResponse = strings.Replace(`Fooba Welcome
+220 Have Body
 H: bar
 B: foo
 

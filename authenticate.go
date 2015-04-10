@@ -19,25 +19,25 @@ var (
 func (cli *Client) Auth(u, p string) error {
 	cli.User = u
 	cli.Pass = p
+	return nil
+}
 
-	conn := cli.p.Get().(*Conn)
-	defer cli.p.Put(conn)
-
+func (conn *Conn) Auth(u, p string) error {
 	res, err := conn.Do("AUTHINFO USER %s", u)
 
 	if err != nil {
-		return fmt.Errorf("Error authenticating user: %v", err)
+		return fmt.Errorf("error authenticating user: %v", err)
 	}
+
+	fmt.Printf("%+v\n", res)
 
 	switch res.Code {
 	case AuthAccepted:
 		return nil
 	case PasswordNeeded:
-		res, err = conn.Do("AUTHINFO PASSWORD %s", p)
+		res, err = conn.Do("AUTHINFO PASS %s", p)
 
-		if res.Code == AuthAccepted {
-			err = nil
-		}
+		fmt.Printf("%+v\n", res)
 	}
 
 	return err

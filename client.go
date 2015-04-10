@@ -12,9 +12,8 @@ type Client struct {
 	MaxConns, Port     int
 	Server, User, Pass string
 
-	connChan chan (chan *Conn)
-	nConns   int
-	p        *pool.Pool
+	nConns int
+	p      *pool.Pool
 
 	cls chan (chan error)
 }
@@ -57,20 +56,31 @@ func NewClient(server string, port, conns int) *Client {
 		Server:   server,
 		Port:     port,
 		MaxConns: conns,
-		connChan: make(chan (chan *Conn)),
 	}
 
 	makeConn := pool.NewFunc(func() (interface{}, error) {
 		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", cli.Server, cli.Port))
 
 		if err != nil {
+			conn.Close()
 			return nil, err
 		}
 
-		return NewConn(conn), nil
+		nConn := NewConn(conn)
+
+		if cli.User != "" {
+			err = nConn.Auth(cli.User, cli.Pass)
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return nConn, err
 	})
 
 	cli.p = pool.NewPool(makeConn)
+	cli.p.SetMax(uint(conns))
 
 	return &cli
 }
