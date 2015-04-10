@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"sync"
+
+	"git.astuart.co/andrew/pool"
 )
 
 type Client struct {
@@ -13,38 +14,13 @@ type Client struct {
 
 	connChan chan (chan *Conn)
 	nConns   int
-	p        *sync.Pool
+	p        *pool.Pool
 
 	cls chan (chan error)
 }
 
-func (cli *Client) run() {
-	for {
-		select {
-		case nc := <-cli.connChan:
-			if cli.nConns < cli.MaxConns {
-				cli.nConns++
-				conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", cli.Server, cli.Port))
-
-				if err != nil {
-					cli.nConns--
-					nc <- nil
-				}
-				nc <- NewConn(conn)
-			} else {
-				cli.p.New = nil
-				nc <- nil
-			}
-		}
-	}
-}
-
 func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
 	conn := cli.p.Get().(*Conn)
-
-	if conn == nil {
-		return nil, fmt.Errorf("client err")
-	}
 
 	res, err := conn.Do(format, args...)
 
@@ -84,21 +60,17 @@ func NewClient(server string, port, conns int) *Client {
 		connChan: make(chan (chan *Conn)),
 	}
 
-	go cli.run()
+	makeConn := pool.NewFunc(func() (interface{}, error) {
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", cli.Server, cli.Port))
 
-	cli.p = &sync.Pool{
-		New: func() interface{} {
-			nch := make(chan *Conn)
-			cli.connChan <- nch
+		if err != nil {
+			return nil, err
+		}
 
-			conn := <-nch
-			if conn == nil {
-				cli.p.New = nil
-			}
+		return NewConn(conn), nil
+	})
 
-			return conn
-		},
-	}
+	cli.p = pool.NewPool(makeConn)
 
 	return &cli
 }

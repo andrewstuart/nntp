@@ -6,13 +6,14 @@ import (
 	"io"
 	"net"
 	"strings"
-	"sync"
 	"testing"
+
+	"git.astuart.co/andrew/pool"
 )
 
 func getTestClient(s string) *Client {
 	cli := &Client{
-		p: &sync.Pool{},
+		p: pool.NewPool(nil),
 	}
 
 	tc := &testCloser{
@@ -52,10 +53,6 @@ func TestClient(t *testing.T) {
 		t.Errorf("Wrong body returned: %s", buf.String())
 	}
 
-	if cli.p.Get() != nil {
-		t.Errorf("Somehow got non-nil from pool")
-	}
-
 	err = res.Body.Close()
 
 	if err != nil {
@@ -67,6 +64,7 @@ func TestClient(t *testing.T) {
 		t.Errorf("Could not get a connection after closing body")
 	}
 	cli.p.Put(conn)
+
 	res, err = cli.Do("Foo again")
 
 	if err != nil {
@@ -134,12 +132,6 @@ func TestNewClient(t *testing.T) {
 
 	buf := &bytes.Buffer{}
 	io.Copy(buf, res.Body)
-
-	_, err2 := cli.Do("foo bar baz")
-
-	if err2 == nil {
-		t.Errorf("somehow did a request")
-	}
 
 	res.Body.Close()
 

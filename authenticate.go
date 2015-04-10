@@ -20,7 +20,7 @@ func (cli *Client) Auth(u, p string) error {
 	cli.User = u
 	cli.Pass = p
 
-	conn := cli.p.Get()
+	conn := cli.p.Get().(*Conn)
 	defer cli.p.Put(conn)
 
 	res, err := conn.Do("AUTHINFO USER %s", u)
