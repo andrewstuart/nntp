@@ -2,7 +2,9 @@ package nntp
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"net"
 	"strings"
 	"sync"
 	"testing"
@@ -16,6 +18,7 @@ func getTestClient(s string) *Client {
 	tc := &testCloser{
 		Reader: strings.NewReader(s),
 	}
+
 	cli.p.Put(NewConn(tc))
 	return cli
 }
@@ -59,8 +62,19 @@ func TestClient(t *testing.T) {
 		t.Errorf("Error closing body: %v", err)
 	}
 
-	if cli.p.Get() == nil {
+	conn := cli.p.Get()
+	if conn == nil {
 		t.Errorf("Could not get a connection after closing body")
+	}
+	cli.p.Put(conn)
+	res, err = cli.Do("Foo again")
+
+	if err != nil {
+		t.Fatalf("Second read failed for test client")
+	}
+
+	if res.Code != 200 {
+		t.Errorf("Wrong response code: %d", res.Code)
 	}
 }
 
@@ -95,4 +109,49 @@ B: foo
 foobarbaz
 ..foo
 .
+200 no body
 `, "\n", "\r\n", -1)
+
+func TestNewClient(t *testing.T) {
+	go func() {
+		ln, _ := net.Listen("tcp", ":15531")
+		conn, _ := ln.Accept()
+		fmt.Fprint(conn, testClientResponse)
+		conn.Close()
+	}()
+
+	cli := NewClient("localhost", 15531, 1)
+
+	res, err := cli.Do("foo bar")
+
+	if err != nil {
+		t.Errorf("Error on NewClient test: %v", err)
+	}
+
+	if res.Body == nil {
+		t.Fatalf("Did not have a body on response")
+	}
+
+	buf := &bytes.Buffer{}
+	io.Copy(buf, res.Body)
+
+	_, err2 := cli.Do("foo bar baz")
+
+	if err2 == nil {
+		t.Errorf("somehow did a request")
+	}
+
+	res.Body.Close()
+
+	if len(res.Headers) != 2 {
+		t.Errorf("Wrong number of headers: %d", len(res.Headers))
+	}
+
+	if res.Code != 220 {
+		t.Errorf("Wrong res code on NewClient: %d", res.Code)
+	}
+
+	if buf.String() != "foobarbaz\r\n.foo\r\n" {
+		t.Errorf("Wrong body returned: %s", buf)
+	}
+}

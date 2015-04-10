@@ -46,7 +46,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 
 	sa := strings.Split(strings.TrimSpace(s), " ")
 	if len(sa) < 2 {
-		return nil, IllegalResponse
+		return nil, fmt.Errorf("error getting response code: %v", err)
 	}
 
 	res := &Response{
@@ -55,7 +55,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 	}
 
 	if code, err := strconv.Atoi(sa[0]); err != nil {
-		return nil, IllegalResponse
+		return nil, fmt.Errorf("error converting response code: %v", err)
 	} else {
 		res.Code = code
 		res.Message = sa[1]
@@ -66,7 +66,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 		tpr := textproto.NewReader(br)
 		h, err := tpr.ReadMIMEHeader()
 		if err != nil {
-			return nil, IllegalResponse
+			return nil, fmt.Errorf("error reading headers: %v", err)
 		}
 
 		res.Headers = h

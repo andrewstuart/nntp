@@ -32,6 +32,7 @@ func (cli *Client) run() {
 				}
 				nc <- NewConn(conn)
 			} else {
+				cli.p.New = nil
 				nc <- nil
 			}
 		}

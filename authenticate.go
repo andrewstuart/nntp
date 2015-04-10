@@ -1,5 +1,7 @@
 package nntp
 
+import "fmt"
+
 //https://tools.ietf.org/html/rfc4643
 const (
 	AuthAccepted   = 281
@@ -18,16 +20,24 @@ func (cli *Client) Auth(u, p string) error {
 	cli.User = u
 	cli.Pass = p
 
-	conn := cli.p.Get().(*Conn)
+	conn := cli.p.Get()
+	defer cli.p.Put(conn)
 
 	res, err := conn.Do("AUTHINFO USER %s", u)
+
+	if err != nil {
+		return fmt.Errorf("Error authenticating user: %v", err)
+	}
 
 	switch res.Code {
 	case AuthAccepted:
 		return nil
 	case PasswordNeeded:
 		res, err = conn.Do("AUTHINFO PASSWORD %s", p)
-	default:
+
+		if res.Code == AuthAccepted {
+			err = nil
+		}
 	}
 
 	return err

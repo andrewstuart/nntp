@@ -17,15 +17,15 @@ func (c ConnErr) Error() string {
 }
 
 type Conn struct {
-	*bufio.Reader
+	br *bufio.Reader
 	io.Writer
 	cls chan (chan error)
 }
 
 func NewConn(c io.ReadWriteCloser) *Conn {
 	return &Conn{
-		Reader: bufio.NewReader(c),
-		Writer: io.Writer(c),
+		br:     bufio.NewReader(c),
+		Writer: c,
 		cls:    make(chan (chan error)),
 	}
 }
@@ -36,7 +36,7 @@ func (c *Conn) Close() error {
 
 func (c *Conn) Do(format string, is ...interface{}) (*Response, error) {
 	fmt.Fprintf(c, strings.TrimSpace(format)+"\r\n", is...)
-	res, err := NewResponse(c)
+	res, err := NewResponse(c.br)
 
 	if err != nil {
 		return nil, err

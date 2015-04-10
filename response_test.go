@@ -2,6 +2,8 @@ package nntp
 
 import (
 	"bufio"
+	"bytes"
+	"io"
 	"io/ioutil"
 	"net/textproto"
 	"strings"
@@ -94,6 +96,27 @@ func TestResponse(t *testing.T) {
 	}
 
 	checkHeaders(r2head, res2.Headers, t)
+
+	io.Copy(&bytes.Buffer{}, res.Body)
+	res.Body.Close()
+
+	res, err = NewResponse(br)
+
+	if err == nil {
+		t.Errorf("Magically converted 2a25 to a number somehow")
+	}
+
+	res, err = NewResponse(br)
+
+	if err == nil {
+		t.Errorf("Should have errored with not enough responses.")
+	}
+
+	res, err = NewResponse(br)
+
+	if err == nil {
+		t.Errorf("Should have returned error upon illegal mime header duplication")
+	}
 }
 
 func checkHeaders(e map[string]string, h textproto.MIMEHeader, t *testing.T) {
@@ -124,5 +147,9 @@ Five-Six: 56
 
 This is another response body
 ..Yeah, man.
+.
+2a25 Bar
+300
+220 Foo
 .
 `, "\n", "\r\n", -1)

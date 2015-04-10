@@ -38,6 +38,7 @@ func NewReader(r io.Reader) *Reader {
 func (r *Reader) Read(p []byte) (written int, err error) {
 	if r.eof {
 		err = io.EOF
+		return
 	}
 
 	var bt byte

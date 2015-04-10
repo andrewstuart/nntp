@@ -1,8 +1,8 @@
 package nntp
 
 import (
+	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -26,7 +26,7 @@ func (tc *testCloser) Write(p []byte) (int, error) {
 
 func TestConnection(t *testing.T) {
 	tc := &testCloser{
-		Reader: strings.NewReader(clientTestString),
+		Reader: bufio.NewReader(strings.NewReader(clientTestString)),
 	}
 	nc := NewConn(tc)
 
@@ -45,7 +45,7 @@ func TestConnection(t *testing.T) {
 	_, err = io.Copy(b, res.Body)
 
 	if err != nil {
-		fmt.Println("Error copying body: %v", err)
+		t.Errorf("Error copying body: %v", err)
 	}
 
 	if b.String() != "Foo\r\n" {
@@ -61,6 +61,15 @@ func TestConnection(t *testing.T) {
 	if tc.closed {
 		t.Errorf("Body Close closed underlying test connection")
 	}
+
+	_, err = nc.Do("foo")
+
+	if err == nil {
+		t.Errorf("Error was not returned on empty reader")
+	}
+
+	err = nc.Close()
+
 }
 
 var clientTestString string = strings.Replace(`220 okay
