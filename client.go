@@ -28,11 +28,7 @@ func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
 	}
 
 	if res.Body != nil {
-		res.Body = &poolBody{
-			ReadCloser: res.Body,
-			cli:        cli,
-			conn:       conn,
-		}
+		res.Body = getPoolBody(cli.p, conn, res.Body)
 	} else {
 		cli.p.Put(conn)
 	}
@@ -40,14 +36,22 @@ func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
 	return res, nil
 }
 
+func getPoolBody(p pool.Pooler, conn *Conn, rc io.ReadCloser) *poolBody {
+	return &poolBody{
+		ReadCloser: rc,
+		p:          p,
+		conn:       conn,
+	}
+}
+
 type poolBody struct {
 	io.ReadCloser
-	cli  *Client
+	p    pool.Pooler
 	conn *Conn
 }
 
 func (pb *poolBody) Close() error {
-	pb.cli.p.Put(pb.conn)
+	pb.p.Put(pb.conn)
 	return pb.ReadCloser.Close()
 }
 

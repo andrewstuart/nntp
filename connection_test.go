@@ -52,6 +52,17 @@ func TestConnection(t *testing.T) {
 		t.Errorf("Wrong body reported: %s", b.String())
 	}
 
+	var n int
+	n, err = res.Body.Read(make([]byte, 512))
+
+	if err != io.EOF {
+		t.Fatalf("Did not return EOF before close called.")
+	}
+
+	if n > 0 {
+		t.Fatalf("Somehow read more than 0 bytes on eof")
+	}
+
 	err = res.Body.Close()
 
 	if err != nil {
@@ -62,14 +73,22 @@ func TestConnection(t *testing.T) {
 		t.Errorf("Body Close closed underlying test connection")
 	}
 
-	_, err = nc.Do("foo")
+	res, err = nc.Do("foo")
 
-	if err == nil {
-		t.Errorf("Error was not returned on empty reader")
+	if err != nil {
+		t.Errorf("Got an error for second request: %v", err)
 	}
 
-	err = nc.Close()
+	if res.Code != 230 {
+		t.Errorf("Wrong code: %d, should be 230", res.Code)
+	}
 
+	b = &bytes.Buffer{}
+	io.Copy(b, res.Body)
+
+	if b.String() != "Bar\r\n" {
+		t.Errorf("Wrong body")
+	}
 }
 
 var clientTestString string = strings.Replace(`Welcome
@@ -77,5 +96,9 @@ var clientTestString string = strings.Replace(`Welcome
 H: FooBar
 
 Foo
+.
+230 Test
+
+Bar
 .
 `, "\n", "\r\n", -1)

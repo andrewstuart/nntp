@@ -20,17 +20,19 @@ type Conn struct {
 	br  *bufio.Reader
 	w   io.Writer
 	cls chan (chan error)
+	grp string
 }
 
 func NewConn(c io.ReadWriteCloser) *Conn {
+	br := bufio.NewReader(c)
 	nnConn := Conn{
-		br:  bufio.NewReader(c),
+		br:  br,
 		w:   c,
 		cls: make(chan (chan error)),
 	}
 
 	//Throw away welcome line
-	nnConn.br.ReadBytes('\n')
+	br.ReadBytes('\n')
 
 	return &nnConn
 }

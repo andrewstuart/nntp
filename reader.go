@@ -90,18 +90,9 @@ func (r *Reader) Close() error {
 		r.c.Close()
 	}
 
-	if _, err := r.R.Peek(1); err != nil {
-		//Swallo io.EOF and don't reset the reader
-		if err == io.EOF {
-			return nil
-		} else {
-			return err
-		}
-	}
-
 	//Reset reader
 	r.eof = false
-	r.nl = true
+	r.nl = false
 
 	return nil
 }

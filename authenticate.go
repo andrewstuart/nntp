@@ -29,15 +29,11 @@ func (conn *Conn) Auth(u, p string) error {
 		return fmt.Errorf("error authenticating user: %v", err)
 	}
 
-	fmt.Printf("%+v\n", res)
-
 	switch res.Code {
 	case AuthAccepted:
 		return nil
 	case PasswordNeeded:
 		res, err = conn.Do("AUTHINFO PASS %s", p)
-
-		fmt.Printf("%+v\n", res)
 	}
 
 	return err
