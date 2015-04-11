@@ -29,7 +29,12 @@ func (cli *Client) GetArticle(group, id string) (res *Response, err error) {
 		return nil, err
 	}
 
+	if res.Code == NoArticleWithId {
+		return nil, fmt.Errorf("no article with id %s", id)
+	}
+
 	if res.Body != nil {
+		//Wraps body in a Closer that returns the connection to the pool.
 		res.Body = getPoolBody(cli.p, conn, res.Body)
 	} else {
 		defer cli.p.Put(conn)
