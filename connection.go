@@ -40,14 +40,5 @@ func (c *Conn) Close() error {
 
 func (c *Conn) Do(format string, is ...interface{}) (*Response, error) {
 	fmt.Fprintf(c.w, strings.TrimSpace(format)+"\r\n", is...)
-
-	res, err := NewResponse(c.br)
-
-	fmt.Printf(format+"\n", is...)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return NewResponse(c.br)
 }
