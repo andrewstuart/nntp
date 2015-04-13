@@ -21,8 +21,22 @@ type Conn struct {
 	w  io.Writer
 }
 
-func NewConn(c io.ReadWriteCloser) *Conn {
-	br := bufio.NewReader(c)
+func (c *Conn) Wrap(fn ...func(io.Reader) io.Reader) error {
+	var r io.Reader
+	for i := range fn {
+		r = fn[i](r)
+	}
+	c.br = bufio.NewReader(r)
+	return nil
+}
+
+func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) *Conn {
+	var r io.Reader
+	for w := range wrappers {
+		r = wrappers[w](c)
+	}
+
+	br := bufio.NewReader(r)
 	nnConn := Conn{
 		br: br,
 		w:  c,
