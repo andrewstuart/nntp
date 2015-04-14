@@ -19,27 +19,34 @@ func (c ConnErr) Error() string {
 type Conn struct {
 	br *bufio.Reader
 	w  io.Writer
+
+	orig io.ReadWriteCloser
 }
 
-func (c *Conn) Wrap(fn ...func(io.Reader) io.Reader) error {
-	var r io.Reader
-	for i := range fn {
-		r = fn[i](r)
+func (c *Conn) Wrap(fn ...func(io.Reader) io.Reader) {
+	if fn != nil {
+		var r io.Reader
+		for i := range fn {
+			r = fn[i](r)
+		}
+		c.br = bufio.NewReader(r)
 	}
-	c.br = bufio.NewReader(r)
-	return nil
 }
 
 func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) *Conn {
-	var r io.Reader
-	for w := range wrappers {
-		r = wrappers[w](c)
+	var r io.Reader = c
+	if wrappers != nil {
+		for w := range wrappers {
+			r = wrappers[w](c)
+		}
 	}
 
 	br := bufio.NewReader(r)
 	nnConn := Conn{
 		br: br,
 		w:  c,
+
+		orig: c,
 	}
 
 	//Throw away welcome line
