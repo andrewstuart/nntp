@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"time"
 
 	"git.astuart.co/andrew/pool"
 )
@@ -99,7 +98,6 @@ func NewClient(server string, port int) *Client {
 	})
 
 	cli.p = pool.NewPool(makeConn)
-	cli.p.SetTimeout(30 * time.Second)
 
 	return cpt
 }
