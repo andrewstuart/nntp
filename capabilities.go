@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+const (
+	CapabilitiesFollow = 101
+)
+
 func (cli *Client) Capabilities() ([]string, error) {
 	c, err := cli.p.Get()
 
@@ -18,6 +22,10 @@ func (cli *Client) Capabilities() ([]string, error) {
 
 	if err != nil {
 		return nil, fmt.Errorf("error getting capabilities: %v", err)
+	}
+
+	if res.Code != CapabilitiesFollow {
+		return nil, fmt.Errorf("server returned bad code: %d (%s)", res.Code, res.Message)
 	}
 
 	b := &bytes.Buffer{}
