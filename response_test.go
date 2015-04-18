@@ -111,12 +111,6 @@ func TestResponse(t *testing.T) {
 	if err == nil {
 		t.Errorf("Should have errored with not enough responses.")
 	}
-
-	res, err = NewResponse(br)
-
-	if err == nil {
-		t.Errorf("Should have returned error upon illegal mime header duplication")
-	}
 }
 
 func checkHeaders(e map[string]string, h textproto.MIMEHeader, t *testing.T) {
@@ -150,6 +144,4 @@ This is another response body
 .
 2a25 Bar
 300
-220 Foo
-.
 `, "\n", "\r\n", -1)

@@ -9,7 +9,13 @@ const (
 
 //Client method GetArticle
 func (cli *Client) GetArticle(group, id string) (res *Response, err error) {
-	conn := cli.p.Get().(*Conn)
+	cn, err := cli.p.Get()
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting connection: %v", err)
+	}
+
+	conn := cn.(*Conn)
 
 	res, err = conn.Do("GROUP %s", group)
 

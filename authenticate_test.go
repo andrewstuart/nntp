@@ -8,7 +8,10 @@ func TestAuth(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error authenticating: %v", err)
 	}
-	if cli.p.Get() == nil {
+
+	c, _ := cli.p.Get()
+
+	if c == nil {
 		t.Errorf("Couldn't get back a connection")
 	}
 }

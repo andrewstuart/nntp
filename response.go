@@ -64,10 +64,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 	if isMultiLine[res.Code] {
 
 		tpr := textproto.NewReader(br)
-		h, err := tpr.ReadMIMEHeader()
-		if err != nil {
-			return nil, fmt.Errorf("error reading headers: %v", err)
-		}
+		h, _ := tpr.ReadMIMEHeader()
 
 		res.Headers = h
 		res.Body = NewReader(br)
