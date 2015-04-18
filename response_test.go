@@ -81,7 +81,7 @@ func TestResponse(t *testing.T) {
 		t.Fatalf("error getting second response: %v", err2)
 	}
 
-	if res2.Code != 225 {
+	if res2.Code != 220 {
 		t.Errorf("Wrong response code: %d, should be 225", res2.Code)
 	}
 
@@ -135,7 +135,7 @@ Whatever
 ..Foo man chu
 I like this stuff
 .
-225 Bar
+220 Bar
 Header: 34
 Five-Six: 56
 

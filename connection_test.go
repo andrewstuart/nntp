@@ -98,7 +98,6 @@ H: FooBar
 Foo
 .
 230 Test
-
 Bar
 .
 `, "\n", "\r\n", -1)

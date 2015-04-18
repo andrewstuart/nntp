@@ -63,10 +63,12 @@ func NewResponse(r io.Reader) (*Response, error) {
 
 	if isMultiLine[res.Code] {
 
-		//TODO conditionally read headers?
-		h, _ := textproto.NewReader(br).ReadMIMEHeader()
+		switch res.Code {
+		case 222, 220:
+			h, _ := textproto.NewReader(br).ReadMIMEHeader()
+			res.Headers = h
+		}
 
-		res.Headers = h
 		res.Body = NewReader(br)
 	}
 
