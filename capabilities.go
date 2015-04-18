@@ -31,6 +31,7 @@ func (cli *Client) Capabilities() ([]string, error) {
 	b := &bytes.Buffer{}
 
 	io.Copy(b, res.Body)
+	defer cli.p.Put(c)
 
 	bs := bytes.TrimSpace(b.Bytes())
 	caps := strings.Split(string(bs), "\r\n")

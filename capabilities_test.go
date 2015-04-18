@@ -17,6 +17,12 @@ func TestCapabilities(t *testing.T) {
 	if len(res) != 3 {
 		t.Errorf("Wrong number of capabilities in response: %d, %+v", len(res), res)
 	}
+
+	_, err = cli.Capabilities()
+
+	if err == nil {
+		t.Errorf("Did not return error for bad code: %v", err)
+	}
 }
 
 var foo = strings.Replace(`
@@ -24,5 +30,7 @@ var foo = strings.Replace(`
 FOO
 BAR
 BAZ
+.
+502 Capabilites are dumb
 .
 `, "\n", "\r\n", -1)
