@@ -7,6 +7,11 @@ const (
 	NoSuchGroup = 411
 )
 
+type Group struct {
+	Id           string
+	Count, First int
+}
+
 func (cli *Client) JoinGroup(name string) error {
 	req, err := cli.Do("GROUP %s", name)
 
