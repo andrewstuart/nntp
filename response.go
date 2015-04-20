@@ -84,11 +84,12 @@ func readHeaders(br *bufio.Reader) (map[string][]string, error) {
 	var err error
 	var bs []byte
 
-	for err == nil {
+	for {
 		bs, err = br.ReadBytes('\n')
 
 		isEOF := bytes.Equal(bs, []byte(".\r\n"))
 		isEnd := bytes.Equal(bs, []byte("\r\n"))
+
 		if err == io.EOF || isEOF {
 			return h, io.EOF
 		} else if isEnd {
@@ -98,7 +99,8 @@ func readHeaders(br *bufio.Reader) (map[string][]string, error) {
 		kv := bytes.Split(bytes.TrimSpace(bs), []byte(": "))
 
 		if len(kv) < 2 {
-			return h, fmt.Errorf("malformed header")
+			err = fmt.Errorf("malformed header: %s", string(bs))
+			continue
 		}
 
 		k := string(kv[0])

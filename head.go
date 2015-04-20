@@ -1,6 +1,7 @@
 package nntp
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 )
@@ -21,7 +22,9 @@ func (cli *Client) Head(group, id string) (*Response, error) {
 	}
 
 	if res.Body != nil {
+		//Drain body if not nil
 		defer res.Body.Close()
+		io.Copy(&bytes.Buffer{}, res.Body)
 	}
 
 	if res.Code != HeadersFollow {
