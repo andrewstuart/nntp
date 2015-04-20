@@ -16,6 +16,8 @@ func (cli *Client) Head(group, id string) (*Response, error) {
 
 	if err == io.EOF && res != nil {
 		return res, nil
+	} else if err != nil {
+		return nil, err
 	}
 
 	if res.Body != nil {
