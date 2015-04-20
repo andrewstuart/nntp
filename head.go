@@ -1,6 +1,9 @@
 package nntp
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 const HeadersFollow = 221
 
@@ -11,10 +14,13 @@ func (cli *Client) Head(group, id string) (*Response, error) {
 
 	res, err := cli.Do("HEAD %s", id)
 
-	if res.Body == nil {
-		return nil, fmt.Errorf("no header body")
+	if err == io.EOF && res != nil {
+		return res, nil
 	}
-	defer res.Body.Close()
+
+	if res.Body != nil {
+		defer res.Body.Close()
+	}
 
 	if res.Code != HeadersFollow {
 		return nil, fmt.Errorf("error getting headers: %s", res.Message)
