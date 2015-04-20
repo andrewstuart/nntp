@@ -25,7 +25,6 @@ type Response struct {
 var isMultiLine = map[int]bool{
 	100: true,
 	101: true,
-	// 211: true,
 	215: true,
 	220: true,
 	221: true,
@@ -61,10 +60,10 @@ func NewResponse(r io.Reader) (*Response, error) {
 		res.Message = strings.Join(sa[1:], " ")
 	}
 
-	if isMultiLine[res.Code] {
+	if isMultiLine[res.Code] || res.Code == 211 && strings.Contains(res.Message, "follow") {
 
 		switch res.Code {
-		case 222, 220:
+		case 221, 222, 220:
 			h, _ := textproto.NewReader(br).ReadMIMEHeader()
 			res.Headers = h
 		}
