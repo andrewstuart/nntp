@@ -50,7 +50,11 @@ func TestClient(t *testing.T) {
 		t.Fatalf("Did not return a body")
 	}
 
-	io.Copy(buf, res.Body)
+	_, err = io.Copy(buf, res.Body)
+
+	if err != nil {
+		t.Errorf("error reading from body: %v", err)
+	}
 
 	if buf.String() != "foobarbaz\r\n.foo\r\n" {
 		t.Errorf("Wrong body returned: %s", buf.String())

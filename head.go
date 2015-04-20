@@ -9,17 +9,16 @@ func (cli *Client) Head(group, id string) (*Response, error) {
 		return nil, fmt.Errorf("Could not join group %s: %v", group, err)
 	}
 
-	res, err := cli.Head("a", "123")
+	res, err := cli.Do("HEAD %s", id)
 
 	if res.Body == nil {
 		return nil, fmt.Errorf("no header body")
 	}
+	defer res.Body.Close()
 
 	if res.Code != HeadersFollow {
 		return nil, fmt.Errorf("error getting headers: %s", res.Message)
 	}
-
-	defer res.Body.Close()
 
 	return res, err
 }

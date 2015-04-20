@@ -2,6 +2,7 @@ package nntp
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/textproto"
@@ -61,15 +62,53 @@ func NewResponse(r io.Reader) (*Response, error) {
 	}
 
 	if isMultiLine[res.Code] || res.Code == 211 && strings.Contains(res.Message, "follow") {
-
 		switch res.Code {
 		case 221, 222, 220:
-			h, _ := textproto.NewReader(br).ReadMIMEHeader()
+			h, err := readHeaders(br)
 			res.Headers = h
+
+			//Early return if EOF (no Body)
+			if err == io.EOF {
+				return res, nil
+			}
 		}
 
 		res.Body = NewReader(br)
 	}
 
 	return res, nil
+}
+
+func readHeaders(br *bufio.Reader) (map[string][]string, error) {
+	h := make(map[string][]string)
+	var err error
+	var bs []byte
+
+	for err == nil {
+		bs, err = br.ReadBytes('\n')
+
+		isEOF := bytes.Equal(bs, []byte(".\r\n"))
+		isEnd := bytes.Equal(bs, []byte("\r\n"))
+		if err == io.EOF || isEOF {
+			return h, io.EOF
+		} else if isEnd {
+			return h, nil
+		}
+
+		kv := bytes.Split(bytes.TrimSpace(bs), []byte(": "))
+
+		if len(kv) < 2 {
+			return h, fmt.Errorf("malformed header")
+		}
+
+		k := string(kv[0])
+		v := string(kv[1])
+
+		if _, ok := h[k]; !ok {
+			h[k] = make([]string, 0, 1)
+		}
+		h[k] = append(h[k], v)
+	}
+
+	return h, err
 }

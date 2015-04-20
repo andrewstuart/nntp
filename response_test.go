@@ -11,9 +11,7 @@ import (
 )
 
 func TestResponse(t *testing.T) {
-	resReader := strings.NewReader(resString)
-
-	br := bufio.NewReader(resReader)
+	br := bufio.NewReader(strings.NewReader(resString))
 
 	res, err := NewResponse(br)
 
@@ -106,10 +104,28 @@ func TestResponse(t *testing.T) {
 		t.Errorf("Magically converted 2a25 to a number somehow")
 	}
 
-	res, err = NewResponse(br)
+	_, err = NewResponse(br)
 
 	if err == nil {
 		t.Errorf("Should have errored with not enough responses.")
+	}
+
+	res, err = NewResponse(br)
+
+	if err != nil {
+		t.Fatalf("Error getting new response: %v", err)
+	}
+
+	if res.Code != 221 {
+		t.Errorf("Wrong response code: %d", res.Code)
+	}
+
+	if len(res.Headers) != 2 {
+		t.Errorf("Wrong number of response headers: %d, should be 2", len(res.Headers))
+	}
+
+	if res.Headers["Foo"][0] != "bar" {
+		t.Errorf("Wrong %q header: %q", "Foo", res.Headers["Foo"][0])
 	}
 }
 
@@ -144,4 +160,9 @@ This is another response body
 .
 2a25 Bar
 300
+221 headers follow
+Foo: bar
+Baz: Bang
+Baz: Whatevah
+.
 `, "\n", "\r\n", -1)
