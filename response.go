@@ -54,12 +54,14 @@ func NewResponse(r io.Reader) (*Response, error) {
 		Headers: make(map[string][]string),
 	}
 
-	if code, err := strconv.Atoi(sa[0]); err != nil {
+	code, err := strconv.Atoi(sa[0])
+
+	if err != nil {
 		return nil, fmt.Errorf("error converting response code: %v", err)
-	} else {
-		res.Code = code
-		res.Message = strings.Join(sa[1:], " ")
 	}
+
+	res.Code = code
+	res.Message = strings.Join(sa[1:], " ")
 
 	if isMultiLine[res.Code] || res.Code == 211 && strings.Contains(res.Message, "follow") {
 		switch res.Code {

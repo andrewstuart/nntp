@@ -1,10 +1,6 @@
 package nntp
 
-import (
-	"bytes"
-	"fmt"
-	"io"
-)
+import "fmt"
 
 const (
 	ArticleFound    = 220
@@ -43,9 +39,10 @@ func (cli *Client) GetArticle(group, id string) (res *Response, err error) {
 	}
 
 	if res.Body != nil {
-		defer io.Copy(&bytes.Buffer{}, res.Body)
 		//Wraps body in a Closer that returns the connection to the pool.
-		res.Body = getPoolBody(cli.p, conn, res.Body)
+		res.Body = &poolBody{res.Body, func() {
+			cli.p.Put(conn)
+		}}
 	} else {
 		defer cli.p.Put(conn)
 	}
