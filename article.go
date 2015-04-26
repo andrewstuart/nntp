@@ -35,7 +35,7 @@ func (cli *Client) GetArticle(group, id string) (res *Response, err error) {
 	}
 
 	if res.Code == NoArticleWithId {
-		return nil, fmt.Errorf("no article with id %s", id)
+		return nil, fmt.Errorf("no article with id <%s>", id)
 	}
 
 	if res.Body != nil {
