@@ -46,7 +46,7 @@ func NewResponse(r io.Reader) (*Response, error) {
 
 	sa := strings.Split(strings.TrimSpace(s), " ")
 	if len(sa) < 2 {
-		return nil, fmt.Errorf("error getting response code: %v", err)
+		return nil, fmt.Errorf("error getting response code: %s", s)
 	}
 
 	res := &Response{
