@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.astuart.co/andrew/pool"
+	"github.com/andrewstuart/pool"
 )
 
 func getTestClient(s string) *Client {

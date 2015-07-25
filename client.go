@@ -6,7 +6,7 @@ import (
 	"io"
 	"net"
 
-	"git.astuart.co/andrew/pool"
+	"github.com/andrewstuart/pool"
 )
 
 type Client struct {

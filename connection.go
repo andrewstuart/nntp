@@ -50,7 +50,7 @@ func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) *Conn 
 	}
 
 	//Throw away welcome line
-	defer br.ReadBytes('\n')
+	br.ReadBytes('\n')
 
 	return &nnConn
 }
