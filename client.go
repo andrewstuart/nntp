@@ -63,43 +63,39 @@ func (pb *poolBody) Close() error {
 	return pb.ReadCloser.Close()
 }
 
+func (c *Client) newConn() (interface{}, error) {
+	var conn io.ReadWriteCloser
+	var err error
+	if c.Tls {
+		conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", c.Server, c.Port), nil)
+	} else {
+		conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", c.Server, c.Port))
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	nConn := NewConn(conn)
+
+	if c.User != "" {
+		err = nConn.Auth(c.User, c.Pass)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return nConn, err
+}
+
 func NewClient(server string, port int) *Client {
 	cli := Client{
 		Server: server,
 		Port:   port,
 	}
-
-	cpt := &cli
-
-	makeConn := pool.NewFunc(func() (interface{}, error) {
-		var conn io.ReadWriteCloser
-		var err error
-		if cpt.Tls {
-			conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", cpt.Server, cpt.Port), nil)
-		} else {
-			conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", cpt.Server, cpt.Port))
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		nConn := NewConn(conn)
-
-		if cli.User != "" {
-			err = nConn.Auth(cli.User, cli.Pass)
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return nConn, err
-	})
-
-	cli.p = pool.NewPool(makeConn)
-
-	return cpt
+	cli.p = pool.NewPool(cli.newConn)
+	return &cli
 }
 
 func (cli *Client) SetMaxConns(n int) {
