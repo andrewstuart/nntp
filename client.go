@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"time"
 
 	"github.com/andrewstuart/pool"
 )
@@ -63,6 +64,8 @@ func (pb *poolBody) Close() error {
 	return pb.ReadCloser.Close()
 }
 
+//The unexported newConn function is used by the client's connection pool to
+//create a new wrapped tcp connection when possible.
 func (c *Client) newConn() (interface{}, error) {
 	var conn io.ReadWriteCloser
 	var err error
@@ -87,6 +90,10 @@ func (c *Client) newConn() (interface{}, error) {
 	}
 
 	return nConn, err
+}
+
+func (c *Client) SetTimeout(d time.Duration) {
+	c.p.SetTimeout(d)
 }
 
 func NewClient(server string, port int) *Client {
