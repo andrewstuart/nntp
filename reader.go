@@ -2,7 +2,6 @@ package nntp
 
 import (
 	"bufio"
-	"bytes"
 	"io"
 )
 
@@ -33,16 +32,19 @@ func NewReader(r io.Reader) *Reader {
 	}
 }
 
+var nl = []byte{'\r', '\n'}
+
 //The Read method handles translation of the NNTP escaping and marking EOF when
 //the end of a body is received.
-func (r *Reader) Read(p []byte) (written int, err error) {
+func (r *Reader) Read(p []byte) (bytesRead int, err error) {
 	if r.eof {
 		err = io.EOF
 		return
 	}
 
 	var bt byte
-	for err == nil && written < len(p) {
+	var bs []byte
+	for err == nil && bytesRead < len(p) {
 		bt, err = r.R.ReadByte()
 
 		if err != nil {
@@ -52,29 +54,28 @@ func (r *Reader) Read(p []byte) (written int, err error) {
 		switch bt {
 		case '.':
 			if r.nl {
-				var bs []byte
 				bs, err = r.R.Peek(2)
 
 				if err != nil {
 					return
 				}
 
-				if bytes.Equal(bs, []byte("\r\n")) || bs[0] == '\n' {
+				if len(bs) == 2 && bs[0] == '\r' && bs[1] == '\n' {
 					r.eof = true
 					err = io.EOF
 					r.R.ReadBytes('\n')
 					return
-				} else {
-					r.nl = false
-					continue
 				}
+
+				r.nl = false
+				continue
 			}
 		case '\n':
 			r.nl = true
 		}
 
-		p[written] = bt
-		written++
+		p[bytesRead] = bt
+		bytesRead++
 
 		if bt != '\n' {
 			r.nl = false

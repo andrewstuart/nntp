@@ -2,6 +2,8 @@ package nntp
 
 import (
 	"bufio"
+	"bytes"
+	"io"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -25,6 +27,25 @@ func TestReader(t *testing.T) {
 	dotLine := 5
 	if lines[dotLine] != ".Whodunit\r" {
 		t.Errorf("Did not properly escape double dot: %s", lines[dotLine])
+	}
+}
+
+func BenchmarkReader(b *testing.B) {
+	buf := bytes.NewBuffer([]byte(readerTest))
+	b.SetBytes(int64(len(readerTest)))
+
+	dest := make([]byte, 2<<20)
+
+	br := bufio.NewReader(buf)
+	for i := 0; i < b.N; i++ {
+		br.Reset(buf)
+		r := NewReader(br)
+
+		_, err := r.Read(dest)
+
+		if err != nil && err != io.EOF {
+			b.Fatalf("error while reading: %v", err)
+		}
 	}
 }
 
