@@ -37,10 +37,6 @@ const (
 ```
 
 ```go
-const EndLine = ".\r\n"
-```
-
-```go
 const HeadersFollow = 221
 ```
 
@@ -62,10 +58,6 @@ var (
 	IllegalResponse = fmt.Errorf("illegal response")
 	IllegalHeader   = fmt.Errorf("illegal headers")
 )
-```
-
-```go
-var EndBytes = []byte(EndLine)
 ```
 
 #### type Client
@@ -212,12 +204,15 @@ type Reader struct {
 }
 ```
 
+A Reader is a read/closer that strips NNTP newlines and will unescape
+characters.
 
 #### func  NewReader
 
 ```go
 func NewReader(r io.Reader) *Reader
 ```
+NewReader returns an nntp.Reader for the body of the nttp article.
 
 #### func (*Reader) Close
 
@@ -229,7 +224,7 @@ Close allows users of a Reader to signal that they are done using the reader.
 #### func (*Reader) Read
 
 ```go
-func (r *Reader) Read(p []byte) (written int, err error)
+func (r *Reader) Read(p []byte) (bytesRead int, err error)
 ```
 The Read method handles translation of the NNTP escaping and marking EOF when
 the end of a body is received.

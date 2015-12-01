@@ -5,16 +5,15 @@ import (
 	"io"
 )
 
-const EndLine = ".\r\n"
-
-var EndBytes = []byte(EndLine)
-
+//A Reader is a read/closer that strips NNTP newlines and will unescape
+//characters.
 type Reader struct {
 	R       *bufio.Reader
 	eof, nl bool
 	c       io.Closer //We'll call close if possible on underlying reader
 }
 
+//NewReader returns an nntp.Reader for the body of the nttp article.
 func NewReader(r io.Reader) *Reader {
 	switch r := r.(type) {
 	case *Reader:
@@ -31,8 +30,6 @@ func NewReader(r io.Reader) *Reader {
 		return &rr
 	}
 }
-
-var nl = []byte{'\r', '\n'}
 
 //The Read method handles translation of the NNTP escaping and marking EOF when
 //the end of a body is received.
