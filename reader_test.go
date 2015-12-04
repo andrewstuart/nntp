@@ -2,6 +2,7 @@ package nntp
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -31,17 +32,21 @@ func TestReader(t *testing.T) {
 
 func BenchmarkReader(b *testing.B) {
 	b.SetBytes(int64(len(readerTest)))
-
-	dest := make([]byte, 2<<20)
-
 	b.RunParallel(func(pb *testing.PB) {
+		bs := []byte(readerTest)
+		dest := &bytes.Buffer{}
+
 		for pb.Next() {
-			r := NewReader(strings.NewReader(readerTest))
+			r := NewReader(bytes.NewReader(bs))
 
-			_, err := r.Read(dest)
+			n, err := io.Copy(dest, r)
 
-			if err != nil && err != io.EOF {
+			if err != nil {
 				b.Fatalf("error while reading: %v", err)
+			}
+
+			if n == 0 {
+				b.Fatalf("Read zero bytes")
 			}
 		}
 	})
