@@ -23,7 +23,7 @@ func TestListGroup(t *testing.T) {
 
 	for i := range arts {
 		if arts[i] != strconv.Itoa(artExp[i]) {
-			t.Errorf("Wrong article at index %d: %d, should be %d", i, arts[i], artExp[i])
+			t.Errorf("Wrong article at index %d: %s, should be %d", i, arts[i], artExp[i])
 		}
 	}
 }
