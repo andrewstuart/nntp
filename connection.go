@@ -33,12 +33,10 @@ func (c *Conn) Wrap(fn ...func(io.Reader) io.Reader) {
 	}
 }
 
-func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) *Conn {
+func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) (string, *Conn, err) {
 	var r io.Reader = c
-	if wrappers != nil {
-		for w := range wrappers {
-			r = wrappers[w](c)
-		}
+	for w := range wrappers {
+		r = wrappers[w](c)
 	}
 
 	br := bufio.NewReader(r)
@@ -50,9 +48,12 @@ func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) *Conn 
 	}
 
 	//Throw away welcome line
-	br.ReadBytes('\n')
+	w, err := br.ReadBytes('\n')
+	if err != nil {
+		return "", nil, fmt.Errorf("Error reading welcome line: %s", err)
+	}
 
-	return &nnConn
+	return string(w), &nnConn, nil
 }
 
 func (c *Conn) Close() error {

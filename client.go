@@ -12,12 +12,9 @@ import (
 type Client struct {
 	MaxConns, Port     int
 	Server, User, Pass string
-	Tls                bool
+	TLS                bool
 
-	nConns int
-	p      *pool.Pool
-
-	cls chan (chan error)
+	p *pool.Pool
 }
 
 func (cli *Client) Do(format string, args ...interface{}) (*Response, error) {
@@ -64,9 +61,9 @@ func (pb *poolBody) Close() error {
 }
 
 func (c *Client) newConn() (interface{}, error) {
-	var conn io.ReadWriteCloser
+	var conn net.Conn
 	var err error
-	if c.Tls {
+	if c.TLS {
 		conn, err = tls.Dial("tcp", fmt.Sprintf("%s:%d", c.Server, c.Port), nil)
 	} else {
 		conn, err = net.Dial("tcp", fmt.Sprintf("%s:%d", c.Server, c.Port))
@@ -76,7 +73,10 @@ func (c *Client) newConn() (interface{}, error) {
 		return nil, err
 	}
 
-	nConn := NewConn(conn)
+	_, nConn, err := NewConn(conn)
+	if err != nil {
+		return nil, fmt.Errorf("error creating new connection: %v", err)
+	}
 
 	if c.User != "" {
 		err = nConn.Auth(c.User, c.Pass)
