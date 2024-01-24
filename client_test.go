@@ -22,7 +22,8 @@ func getTestClient(s string) *Client {
 		Reader: strings.NewReader(s),
 	}
 
-	cli.p.Put(NewConn(tc))
+	_, c, _ := NewConn(tc)
+	cli.p.Put(c)
 	return cli
 }
 

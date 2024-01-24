@@ -33,7 +33,7 @@ func (c *Conn) Wrap(fn ...func(io.Reader) io.Reader) {
 	}
 }
 
-func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) (string, *Conn, err) {
+func NewConn(c io.ReadWriteCloser, wrappers ...func(io.Reader) io.Reader) (string, *Conn, error) {
 	var r io.Reader = c
 	for w := range wrappers {
 		r = wrappers[w](c)

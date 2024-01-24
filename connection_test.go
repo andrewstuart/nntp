@@ -28,7 +28,7 @@ func TestConnection(t *testing.T) {
 	tc := &testCloser{
 		Reader: bufio.NewReader(strings.NewReader(clientTestString)),
 	}
-	nc := NewConn(tc)
+	_, nc, _ := NewConn(tc)
 
 	res, err := nc.Do("SOME THING")
 
